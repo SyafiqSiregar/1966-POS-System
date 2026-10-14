@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>1966 Caffe POS</title>
+  <link rel="icon" type="image/png" href="./1966-logo-badge.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-header" style="text-align:center;">
+        <img src="./1966-logo-badge.png" alt="1966 Caffe" class="login-logo">
+        <h2 style="font-size:22px; font-weight:800; color:var(--primary); letter-spacing:0.8px; margin-bottom:4px;">1966 CAFFE</h2>
+      </div>
+      <p class="page-subtitle" style="text-align:center; margin-bottom: 20px;">POS Kasir & Manajemen Toko</p>
+      
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-user" placeholder="admin / kasir" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="***" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="btn-login" style="margin-top: 8px;">Masuk ke Sistem</button>
+      <button type="button" class="btn-outline" id="btn-login-quick-attendance" style="margin-top: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;">
+        <i data-lucide="camera"></i> Absensi Karyawan (Selfie)
+      </button>
+      <div style="font-size:12px; color:var(--text-muted); margin-top:14px; text-align:center; background: var(--bg-color); padding: 8px; border-radius: var(--radius-sm);">
+        Akses cepat: <strong>admin</strong> / <strong>admin</strong> atau <strong>kasir</strong> / <strong>kasir</strong>
+      </div>
+      <div class="login-watermark" style="font-size:11px; color:var(--text-muted); opacity:0.75; margin-top:14px; text-align:center; letter-spacing:0.5px; font-weight:500;">
+        1966 Caffe POS • System v2.0
+      </div>
+    </div>
+  </div>
+
+  <div class="app-layout" id="main-app" style="display: none;">
+    <!-- MOBILE / TABLET PORTRAIT TOP NAVBAR -->
+    <header class="mobile-top-navbar">
+      <div class="brand-wrapper" style="display:flex; align-items:center; gap:10px;">
+        <img src="./1966-logo-badge.png" alt="1966 Caffe" class="navbar-logo">
+        <div style="font-weight:800; font-size:16px; letter-spacing:0.6px; color:var(--primary);">1966 CAFFE</div>
+      </div>
+      <button class="btn-burger" id="btn-menu-toggle"><i data-lucide="menu"></i></button>
+    </header>
+
+    <!-- SIDEBAR (Tablet Landscape & Drawer Mode) -->
+    <div class="sidebar-overlay" id="drawer-menu">
+      <aside class="sidebar">
+        <!-- Desktop Header -->
+        <div class="sidebar-header desktop-only">
+          <div class="brand-wrapper" style="display:flex; align-items:center; gap:10px;">
+            <img src="./1966-logo-badge.png" alt="1966 Caffe" class="sidebar-logo">
+            <div class="brand-text" style="display:flex; flex-direction:column;">
+              <span style="font-weight:800; font-size:15px; letter-spacing:0.8px; color:var(--text-on-sidebar); line-height:1.2;">1966 CAFFE</span>
+              <span style="font-size:10px; color:var(--text-on-sidebar-muted); font-weight:500;">Specialty Coffee</span>
+            </div>
+          </div>
+          <span class="logo-badge">POS</span>
+        </div>
+        
+        <!-- Mobile Drawer Header -->
+        <div class="drawer-header mobile-only">
+          <div class="brand-wrapper" style="display:flex; align-items:center; gap:10px;">
+            <img src="./1966-logo-badge.png" alt="1966 Caffe" class="sidebar-logo">
+            <div class="brand-text" style="display:flex; flex-direction:column;">
+              <span style="font-weight:800; font-size:15px; letter-spacing:0.8px; color:var(--text-on-sidebar); line-height:1.2;">1966 CAFFE</span>
+              <span style="font-size:10px; color:var(--text-on-sidebar-muted); font-weight:500;">Specialty Coffee</span>
+            </div>
+          </div>
+          <button id="btn-close-drawer" style="background:transparent; border:none; color:var(--text-on-sidebar); cursor:pointer; min-height:44px; min-width:44px;"><i data-lucide="x"></i></button>
+        </div>
+        
+        <nav class="sidebar-nav">
+          <div class="nav-label desktop-only">Operasional</div>
+          <button class="nav-item admin-only active" data-target="dashboard">
+            <i data-lucide="layout-dashboard"></i> Dashboard
+          </button>
+          <button class="nav-item" data-target="pos">
+            <i data-lucide="shopping-bag"></i> Kasir (POS)
+          </button>
+          <button class="nav-item" data-target="attendance" id="nav-btn-attendance">
+            <i data-lucide="camera"></i> Absensi Staf
+          </button>
+          <button class="nav-item admin-only" data-target="menu-manage">
+            <i data-lucide="coffee"></i> Kelola Menu
+          </button>
+          
+          <div class="nav-label desktop-only">Data & Rekap</div>
+          <button class="nav-item" data-target="history">
+            <i data-lucide="receipt"></i> Riwayat Transaksi
+          </button>
+          <button class="nav-item" data-target="expense">
+            <i data-lucide="wallet"></i> Biaya Operasional
+          </button>
+          <button class="nav-item admin-only" data-target="attendance-report" id="nav-btn-attendance-report">
+            <i data-lucide="calendar-check"></i> Rekap Kehadiran
+          </button>
+          <button class="nav-item admin-only" data-target="reports">
+            <i data-lucide="bar-chart-3"></i> Laporan Omset
+          </button>
+          <button class="nav-item admin-only" data-target="settings">
+            <i data-lucide="sliders"></i> Pengaturan Pajak
+          </button>
+          
+          <div class="nav-label desktop-only admin-only">Sistem & Akses</div>
+          <button class="nav-item admin-only" data-target="users" id="nav-btn-users">
+            <i data-lucide="users"></i> Manajemen Anggota
+          </button>
+        </nav>
+        
+        <div class="sidebar-footer">
+          <div class="user-badge-info">
+            <div class="user-avatar-circle">SA</div>
+            <div class="user-badge-meta">
+              <span>Operator</span>
+              <strong id="current-user-role">Admin Utama</strong>
+            </div>
+            <i data-lucide="chevron-right" style="width:14px; height:14px; color:var(--text-on-sidebar-muted); margin-left:auto;"></i>
+          </div>
+          <button class="nav-item danger" id="btn-logout">
+            <i data-lucide="log-out"></i> Keluar
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-area">
+      <!-- 1. DASHBOARD -->
+      <section id="dashboard" class="page-view admin-only active">
+        <header class="dash-main-header">
+          <div class="dash-header-left">
+            <h2 class="page-title">Ringkasan Hari Ini</h2>
+            <p class="page-subtitle">Performa penjualan 1966 Caffe</p>
+          </div>
+          <div class="dash-header-right">
+            <div class="date-dropdown-pill" id="dash-date-picker-btn">
+              <i data-lucide="calendar"></i>
+              <span id="current-date">Senin, 12 Oktober 2026</span>
+              <i data-lucide="chevron-down" style="width:14px; height:14px; opacity:0.7;"></i>
+            </div>
+            <button class="dash-header-icon-btn" id="btn-notifications" title="Notifikasi">
+              <i data-lucide="bell"></i>
+              <span class="notification-badge-dot"></span>
+            </button>
+            <button class="dash-header-icon-btn" id="btn-dash-theme-toggle" title="Ubah Mode Tampilan">
+              <i data-lucide="sun"></i>
+            </button>
+          </div>
+        </header>
+
+        <div class="dash-sub-stats-bar">
+          <div class="sub-stat-group">
+            <span class="sub-stat-item">Total Transaksi: <strong id="dash-trx-count">0 Transaksi</strong></span>
+            <span class="sub-stat-divider">•</span>
+            <span class="sub-stat-item">Estimasi Laba Bersih: <strong id="dash-net-profit">Rp 0</strong> <i data-lucide="info" class="sub-stat-info-icon" title="Dihitung dari Total Omzet dikurangi Biaya Operasional"></i></span>
+          </div>
+        </div>
+
+        <!-- 4 KPI Metrics Row -->
+        <div class="dash-kpi-grid">
+          <!-- KPI 1: Hero Total Omzet -->
+          <div class="dash-kpi-card hero-card">
+            <div class="kpi-hero-pattern"></div>
+            <div class="kpi-card-top">
+              <div class="kpi-icon-wrapper hero-icon">
+                <i data-lucide="coins"></i>
+              </div>
+              <span class="kpi-trend-pill hero-trend" id="dash-omzet-trend">~ 0%</span>
+            </div>
+            <div class="kpi-card-body">
+              <span class="kpi-label hero-label">Total Omzet</span>
+              <div class="kpi-val hero-val" id="dash-laba">Rp 0</div>
+            </div>
+            <div class="kpi-card-footer hero-footer">
+              <span>Seluruh transaksi hari ini</span>
+            </div>
+          </div>
+
+          <!-- KPI 2: Pendapatan Minuman -->
+          <div class="dash-kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon-wrapper cafe-icon">
+                <i data-lucide="coffee"></i>
+              </div>
+              <span class="kpi-trend-pill" id="dash-kafe-trend">- 0%</span>
+            </div>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Pendapatan Minuman</span>
+              <div class="kpi-val" id="dash-kafe">Rp 0</div>
+            </div>
+            <div class="kpi-card-footer">
+              <span id="dash-kafe-pct">- 0% dari total omzet</span>
+            </div>
+          </div>
+
+          <!-- KPI 3: Pendapatan Makanan & Snack -->
+          <div class="dash-kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon-wrapper food-icon" style="background:var(--carwash-light); color:var(--secondary);">
+                <i data-lucide="utensils"></i>
+              </div>
+              <span class="kpi-trend-pill" id="dash-cuci-trend">~ 0%</span>
+            </div>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Pendapatan Makanan</span>
+              <div class="kpi-val" id="dash-cuci">Rp 0</div>
+            </div>
+            <div class="kpi-card-footer">
+              <span id="dash-cuci-pct">0% dari total omzet</span>
+            </div>
+          </div>
+
+          <!-- KPI 4: Biaya Operasional -->
+          <div class="dash-kpi-card">
+            <div class="kpi-card-top">
+              <div class="kpi-icon-wrapper expense-icon">
+                <i data-lucide="wallet"></i>
+              </div>
+              <span class="kpi-trend-pill expense-trend" id="dash-expense-trend">- 0%</span>
+            </div>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Biaya Operasional</span>
+              <div class="kpi-val" id="dash-pengeluaran">Rp 0</div>
+            </div>
+            <div class="kpi-card-footer">
+              <span id="dash-expense-pct">0% dari total omzet</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Row: Charts -->
+        <div class="dash-charts-grid">
+          <!-- Line Chart: Tren Penjualan -->
+          <div class="dash-card dash-chart-card line-chart-card">
+            <div class="dash-card-header">
+              <div>
+                <h3 class="dash-card-title">Tren Penjualan</h3>
+                <p class="dash-card-subtitle" id="sales-trend-subtitle">Tren omzet minuman & makanan dalam 7 hari terakhir</p>
+              </div>
+              <div class="chart-controls">
+                <div class="chart-filter-pills" id="trend-period-filters">
+                  <button class="filter-pill" data-period="today">Hari Ini</button>
+                  <button class="filter-pill active" data-period="7days">7 Hari</button>
+                  <button class="filter-pill" data-period="month">Bulan Ini</button>
+                  <button class="filter-pill pill-calendar" data-period="custom"><i data-lucide="calendar"></i> Pilih Tanggal</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-legend-row">
+              <div class="legend-item"><span class="legend-dot cafe-dot"></span> Minuman</div>
+              <div class="legend-item"><span class="legend-dot wash-dot" style="background:var(--secondary);"></span> Makanan</div>
+            </div>
+
+            <div class="chart-canvas-wrapper">
+              <canvas id="chart-sales-trend"></canvas>
+            </div>
+          </div>
+
+          <!-- Donut Chart: Komposisi Pendapatan -->
+          <div class="dash-card dash-chart-card donut-chart-card">
+            <div class="dash-card-header">
+              <div>
+                <h3 class="dash-card-title">Komposisi Pendapatan</h3>
+                <p class="dash-card-subtitle">Perbandingan omzet minuman dan makanan</p>
+              </div>
+            </div>
+
+            <div class="donut-content-layout">
+              <div class="donut-chart-box">
+                <canvas id="chart-revenue-donut"></canvas>
+                <div class="donut-center-info">
+                  <div class="donut-center-value" id="donut-center-val">Rp 0</div>
+                  <div class="donut-center-label">Total Omzet</div>
+                </div>
+              </div>
+
+              <div class="donut-legend-list">
+                <div class="donut-legend-row">
+                  <div class="donut-legend-info">
+                    <span class="legend-dot cafe-dot"></span>
+                    <span>Minuman</span>
+                  </div>
+                  <div class="donut-legend-stat">
+                    <strong id="donut-kafe-pct">0%</strong>
+                    <span id="donut-kafe-val">Rp 0</span>
+                  </div>
+                </div>
+                <div class="donut-legend-row">
+                  <div class="donut-legend-info">
+                    <span class="legend-dot wash-dot" style="background:var(--secondary);"></span>
+                    <span>Makanan</span>
+                  </div>
+                  <div class="donut-legend-stat">
+                    <strong id="donut-cuci-pct">0%</strong>
+                    <span id="donut-cuci-val">Rp 0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Tables -->
+        <div class="dash-tables-grid">
+          <!-- Table 1: Produk Terlaris -->
+          <div class="dash-card dash-table-card">
+            <div class="dash-card-header">
+              <div class="header-with-icon">
+                <div class="card-title-icon trophy-icon">
+                  <i data-lucide="trophy"></i>
+                </div>
+                <div>
+                  <h3 class="dash-card-title">Produk Terlaris</h3>
+                  <p class="dash-card-subtitle">Produk yang paling banyak dibeli hari ini</p>
+                </div>
+              </div>
+              <button class="dash-link-action" id="btn-see-all-products" data-target="reports">
+                Lihat Semua <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+
+            <div class="dash-table-wrapper">
+              <table class="dash-data-table" id="table-top-products">
+                <thead>
+                  <tr>
+                    <th style="width: 48px; text-align:center;">No</th>
+                    <th>Nama Produk</th>
+                    <th>Kategori</th>
+                    <th style="text-align: center;">Jumlah Terjual</th>
+                    <th style="text-align: right;">Total Penjualan</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-top-products-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+
+              <div class="dash-empty-state" id="empty-top-products">
+                <div class="empty-icon-circle">
+                  <i data-lucide="package"></i>
+                </div>
+                <h4 class="empty-title">Belum ada produk terlaris hari ini.</h4>
+                <p class="empty-desc">Data akan muncul setelah ada transaksi.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table 2: Transaksi Terkini -->
+          <div class="dash-card dash-table-card">
+            <div class="dash-card-header">
+              <div class="header-with-icon">
+                <div class="card-title-icon receipt-icon">
+                  <i data-lucide="file-text"></i>
+                </div>
+                <div>
+                  <h3 class="dash-card-title">Transaksi Terkini</h3>
+                  <p class="dash-card-subtitle">Daftar transaksi terbaru hari ini</p>
+                </div>
+              </div>
+              <button class="dash-link-action" id="btn-see-all-trx" data-target="history">
+                Lihat Semua <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+
+            <div class="dash-table-wrapper">
+              <table class="dash-data-table" id="table-recent-trx">
+                <thead>
+                  <tr>
+                    <th style="width: 48px; text-align:center;">No</th>
+                    <th>Waktu</th>
+                    <th>Jenis Layanan</th>
+                    <th style="text-align: right;">Total</th>
+                    <th>Kasir</th>
+                    <th style="text-align: center;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-trx-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+
+              <div class="dash-empty-state" id="empty-recent-trx">
+                <div class="empty-icon-circle">
+                  <i data-lucide="receipt"></i>
+                </div>
+                <h4 class="empty-title">Belum ada transaksi.</h4>
+                <p class="empty-desc">Transaksi terbaru akan muncul di sini.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Footer -->
+        <footer class="dash-footer-bar">
+          <div class="footer-left">1966 Caffe • POS Dashboard</div>
+          <div class="footer-right">
+            <span>Terakhir diperbarui: <span id="dash-last-updated">12 Okt 2026, 10:24</span></span>
+            <button class="footer-sync-btn" id="btn-sync-dashboard" title="Segarkan Data Dashboard">
+              <i data-lucide="refresh-cw"></i>
+            </button>
+            <span class="footer-brand">1966 Caffe</span>
+          </div>
+        </footer>
+      </section>
+
+      <!-- 2. POS KASIR (Tablet First) -->
+      <section id="pos" class="page-view pos-layout">
+        <div class="pos-products-area">
+          <header class="pos-header">
+            <!-- Row 1: Universal Search Bar & Catalog Meta -->
+            <div class="pos-search-row">
+              <div class="search-box">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="pos-search" placeholder="Cari nama menu kopi, makanan, snack..." autocomplete="off">
+                <button type="button" id="pos-search-clear" class="search-clear-btn" style="display:none;" title="Bersihkan pencarian">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+              <div class="pos-catalog-meta">
+                <span class="pos-catalog-badge" id="pos-item-count-badge">12 Menu</span>
+              </div>
+            </div>
+
+            <!-- Row 2: Category Filter Pills (Horizontal Scrollable, Never Multiline/Jagged) -->
+            <div class="pos-filters-wrapper">
+              <div class="pos-filters" id="pos-category-filters">
+                <button class="filter-btn active" data-filter="all">Semua</button>
+                <button class="filter-btn" data-filter="KOPI">Kopi</button>
+                <button class="filter-btn" data-filter="NON_KOPI">Non-Kopi</button>
+                <button class="filter-btn" data-filter="MAKANAN">Makanan</button>
+                <button class="filter-btn" data-filter="SNACK">Snack</button>
+              </div>
+            </div>
+          </header>
+
+          <div class="pos-grid" id="pos-grid">
+             <!-- JS Render -->
+          </div>
+        </div>
+
+        <aside class="pos-cart-area">
+          <div class="cart-header">
+            <h3>Pesanan Aktif</h3>
+            <button class="btn-clear" id="btn-clear-cart"><i data-lucide="trash-2"></i> Reset</button>
+          </div>
+          
+          <!-- Tablet Order Type Selection -->
+          <div class="order-type-bar">
+            <button class="order-type-btn active" data-type="DINE_IN">Dine In</button>
+            <button class="order-type-btn" data-type="TAKE_AWAY">Takeaway</button>
+            <button class="order-type-btn" data-type="DELIVERY">Delivery</button>
+          </div>
+          <div class="table-input-bar">
+            <i data-lucide="tag" style="width:14px; height:14px; color:var(--text-muted);"></i>
+            <input type="text" id="order-reference" placeholder="No. Meja / Catatan Pemesan...">
+          </div>
+          
+          <div class="cart-items" id="cart-items">
+             <!-- JS Render -->
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span class="font-bold" id="cart-subtotal">Rp 0</span>
+            </div>
+            <div class="summary-row">
+              <span style="color:var(--primary); cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="document.getElementById('modal-discount').classList.add('show')">
+                <i data-lucide="percent" style="width:13px;height:13px;"></i> Diskon
+              </span>
+              <span class="font-bold text-danger" id="cart-discount">-Rp 0</span>
+            </div>
+            <div class="summary-row">
+              <span>Pajak (PB1)</span>
+              <span class="font-bold" id="cart-tax">Rp 0</span>
+            </div>
+            <div class="divider"></div>
+            <div class="summary-row total-row">
+              <span>Total Bayar</span>
+              <span class="text-primary" id="cart-total">Rp 0</span>
+            </div>
+            
+            <button class="btn-primary" id="btn-checkout">
+              <i data-lucide="credit-card" style="width:16px;height:16px;"></i> Bayar Pesanan
+            </button>
+          </div>
+        </aside>
+      </section>
+
+      <!-- 3. KELOLA MENU -->
+      <section id="menu-manage" class="page-view admin-only">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Katalog Menu & Layanan</h2>
+            <p class="page-subtitle">Daftar harga dan kategori menu</p>
+          </div>
+          <button class="btn-primary-sm" onclick="document.getElementById('modal-add-menu').classList.add('show')">
+            <i data-lucide="plus"></i> Tambah Produk
+          </button>
+        </header>
+        <div class="panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nama Produk</th>
+                  <th>Kategori</th>
+                  <th>Harga Satuan</th>
+                  <th width="180" style="text-align:right;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-menu">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 4. RIWAYAT -->
+      <section id="history" class="page-view">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Riwayat Transaksi</h2>
+            <p class="page-subtitle">Daftar pesanan selesai pada sistem</p>
+          </div>
+        </header>
+
+        <!-- Glanceable Metric Cards for History -->
+        <div class="metrics-row" style="margin-bottom: 16px;">
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator" style="background:var(--primary);"></span> Total Transaksi</div>
+            <div class="metric-val" id="hist-stat-all-omset">Rp 0</div>
+            <small style="color:var(--text-muted); font-size:11px;" id="hist-stat-all-count">0 Transaksi</small>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator indicator-cafe"></span> Omset Minuman</div>
+            <div class="metric-val" style="color:var(--primary);" id="hist-stat-kafe-omset">Rp 0</div>
+            <small style="color:var(--text-muted); font-size:11px;" id="hist-stat-kafe-count">0 Trx</small>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator indicator-wash" style="background:var(--secondary);"></span> Omset Makanan</div>
+            <div class="metric-val" style="color:var(--secondary);" id="hist-stat-wash-omset">Rp 0</div>
+            <small style="color:var(--text-muted); font-size:11px;" id="hist-stat-wash-count">0 Trx</small>
+          </div>
+        </div>
+
+        <!-- Segmented Filter Tabs for History -->
+        <div class="service-filter-tabs" style="margin-bottom: 14px;">
+          <button class="service-tab-btn active" data-service="ALL" id="tab-hist-all">
+            <i data-lucide="layers" style="width:15px;height:15px;"></i> Semua Pesanan
+          </button>
+          <button class="service-tab-btn" data-service="KAFE" id="tab-hist-kafe">
+            <i data-lucide="coffee" style="width:15px;height:15px;"></i> Minuman / Kopi
+          </button>
+          <button class="service-tab-btn" data-service="CUCI" id="tab-hist-cuci">
+            <i data-lucide="utensils" style="width:15px;height:15px;"></i> Makanan / Snack
+          </button>
+        </div>
+
+        <div class="panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No. Transaksi</th>
+                  <th>Waktu</th>
+                  <th>Layanan</th>
+                  <th>Tipe / Ket</th>
+                  <th>Total</th>
+                  <th>Metode</th>
+                  <th style="text-align:right; min-width: 130px;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-history">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. PENGELUARAN & BIAYA OPERASIONAL -->
+      <section id="expense" class="page-view">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Biaya Operasional</h2>
+            <p class="page-subtitle">Pencatatan pengeluaran harian, bahan baku, dan talangan karyawan</p>
+          </div>
+          <button class="btn-primary-sm" id="btn-open-add-expense" onclick="openAddExpenseModal()">
+            <i data-lucide="plus"></i> Catat Biaya
+          </button>
+        </header>
+
+        <!-- Anti-Slop Ledger Summary Hero (Eliminates cookie-cutter 4-stat template) -->
+        <div class="expense-ledger-hero">
+          <div class="ledger-hero-primary">
+            <span class="ledger-hero-label">Total Beban Operasional Bulan Ini</span>
+            <div class="ledger-hero-amount" id="exp-stat-month">Rp 0</div>
+            <div class="ledger-hero-meta" id="exp-stat-month-sub">0 Transaksi Pengeluaran</div>
+          </div>
+          <div class="ledger-hero-secondary">
+            <div class="ledger-sub-card">
+              <span class="ledger-sub-label">Kas Keluar Hari Ini</span>
+              <div class="ledger-sub-val" id="exp-stat-today">Rp 0</div>
+              <span class="ledger-sub-desc" id="exp-stat-today-sub">Dari laci kasir: Rp 0</span>
+            </div>
+            <div class="ledger-sub-card alert" id="card-metric-reimb">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <span class="ledger-sub-label">Talangan Karyawan</span>
+                <span class="badge-alert-count" id="exp-stat-reimb-count">0 Menunggu</span>
+              </div>
+              <div class="ledger-sub-val alert-text" id="exp-stat-reimb-pending">Rp 0</div>
+              <span class="ledger-sub-desc">Belum dilunasi dari kas kasir</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Touch-Friendly Horizontal Filter Chips (No wrapping clutter on phone) -->
+        <div class="ledger-filter-wrapper">
+          <div class="ledger-filter-chips">
+            <button class="filter-chip active" data-expense-filter="ALL" id="tab-exp-all">
+              <i data-lucide="layers" style="width:14px;height:14px;"></i> Semua Biaya
+            </button>
+            <button class="filter-chip" data-expense-filter="KASIR" id="tab-exp-kasir">
+              <i data-lucide="wallet" style="width:14px;height:14px;"></i> Dari Kas Toko
+            </button>
+            <button class="filter-chip" data-expense-filter="PENDING" id="tab-exp-pending">
+              <i data-lucide="clock" style="width:14px;height:14px;"></i> Talangan (Belum Diganti)
+            </button>
+            <button class="filter-chip" data-expense-filter="SETTLED" id="tab-exp-settled">
+              <i data-lucide="check-circle" style="width:14px;height:14px;"></i> Talangan (Lunas)
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Date-Grouped Container -->
+        <div id="expense-grouped-container">
+          <!-- JS Render -->
+        </div>
+      </section>
+
+      <!-- 6. LAPORAN -->
+      <section id="reports" class="page-view admin-only">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Rekapitulasi Penjualan</h2>
+            <p class="page-subtitle">Ringkasan transaksi berdasarkan periode</p>
+          </div>
+          <button class="btn-outline" id="btn-open-export-modal"><i data-lucide="printer"></i> Cetak Rekap</button>
+        </header>
+
+        <!-- Glanceable Metric Cards for Reports (Omset, Biaya, Laba Bersih) -->
+        <div class="metrics-row" style="margin-bottom: 16px;">
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator" style="background:var(--primary);"></span> Total Omset Penjualan</div>
+            <div class="metric-val" id="rep-stat-all-omset">Rp 0</div>
+            <small style="color:var(--text-muted); font-size:11px;" id="rep-stat-all-count">0 Transaksi</small>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator" style="background:var(--danger);"></span> Total Biaya Operasional</div>
+            <div class="metric-val" style="color:var(--danger);" id="rep-stat-expense">Rp 0</div>
+            <small style="color:var(--text-muted); font-size:11px;" id="rep-stat-expense-count">0 Catatan Biaya</small>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator" style="background:var(--success);"></span> Estimasi Laba Bersih</div>
+            <div class="metric-val" style="color:var(--success); font-weight:700;" id="rep-stat-net-profit">Rp 0</div>
+            <small style="color:var(--text-muted); font-size:11px;" id="rep-stat-margin">Margin: 0%</small>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator indicator-cafe"></span> Minuman vs Makanan</div>
+            <div class="metric-val" style="font-size:15px; color:var(--text-main);" id="rep-stat-split-omset">Rp 0 / Rp 0</div>
+            <small style="color:var(--text-muted); font-size:11px;" id="rep-stat-split-count">0 Trx Minuman | 0 Trx Makanan</small>
+          </div>
+        </div>
+
+        <!-- Segmented Filter Tabs for Reports -->
+        <div class="service-filter-tabs" style="margin-bottom: 14px;">
+          <button class="service-tab-btn active" data-report-service="ALL" id="tab-rep-all">
+            <i data-lucide="bar-chart-3" style="width:15px;height:15px;"></i> Rekap Gabungan
+          </button>
+          <button class="service-tab-btn" data-report-service="KAFE" id="tab-rep-kafe">
+            <i data-lucide="coffee" style="width:15px;height:15px;"></i> Rekap Minuman
+          </button>
+          <button class="service-tab-btn" data-report-service="CUCI" id="tab-rep-cuci">
+            <i data-lucide="utensils" style="width:15px;height:15px;"></i> Rekap Makanan
+          </button>
+        </div>
+
+        <div class="panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead id="thead-reports">
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Jumlah Transaksi</th>
+                  <th>Total Minuman</th>
+                  <th>Total Makanan</th>
+                  <th>Total Omset</th>
+                </tr>
+              </thead>
+              <tbody id="table-reports">
+                <!-- JS Render -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. PENGATURAN PAJAK -->
+      <section id="settings" class="page-view admin-only">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Pengaturan Pajak & Biaya</h2>
+            <p class="page-subtitle">Kelola PB1 dan biaya layanan kasir</p>
+          </div>
+          <button class="btn-primary-sm" onclick="document.getElementById('modal-add-tax').classList.add('show')">
+            <i data-lucide="plus"></i> Tambah Pajak
+          </button>
+        </header>
+        <div class="panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nama Pajak / Biaya</th>
+                  <th>Persentase (%)</th>
+                  <th>Status</th>
+                  <th width="150" style="text-align:right;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-taxes">
+                <!-- JS Render -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. MANAJEMEN ANGGOTA & KASIR -->
+      <section id="users" class="page-view admin-only">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Manajemen Anggota & Kasir</h2>
+            <p class="page-subtitle">Kelola akun operator kasir dan administrator 1966 Caffe</p>
+          </div>
+          <button class="btn-primary-sm" onclick="openAddUserModal()">
+            <i data-lucide="user-plus"></i> Tambah Anggota
+          </button>
+        </header>
+
+        <!-- User Summary Metrics -->
+        <div class="metrics-row" style="margin-bottom: 16px;">
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator" style="background:var(--primary);"></span> Total Anggota</div>
+            <div class="metric-val" id="user-stat-total">0</div>
+            <small style="color:var(--text-muted); font-size:11px;">Akun terdaftar di sistem</small>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator" style="background:var(--success);"></span> Kasir Aktif</div>
+            <div class="metric-val" style="color:var(--success);" id="user-stat-cashiers">0</div>
+            <small style="color:var(--text-muted); font-size:11px;">Operator bertugas</small>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label"><span class="metric-indicator" style="background:#073C64;"></span> Administrator</div>
+            <div class="metric-val" id="user-stat-admins">0</div>
+            <small style="color:var(--text-muted); font-size:11px;">Hak akses penuh</small>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nama Anggota</th>
+                  <th>Username</th>
+                  <th>Password / PIN</th>
+                  <th>Hak Akses</th>
+                  <th>Status</th>
+                  <th>Terdaftar</th>
+                  <th style="text-align:right; width:120px;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-users">
+                <!-- JS Render -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. KIOS ABSENSI STAF (Full Offline Selfie) -->
+      <section id="attendance" class="page-view">
+        <header class="page-header" style="align-items:flex-start;">
+          <div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;">
+              <h2 class="page-title" style="margin-bottom:0;">Kios Absensi Staf</h2>
+              <div class="kiosk-mode-badge" id="kiosk-mode-security-badge" style="display:none; align-items:center; gap:6px; background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; font-size:12px; font-weight:700; padding:4px 10px; border-radius:9999px;">
+                <i data-lucide="shield-check" style="width:14px; height:14px; color:#D97706;"></i> Mode Kios Terisolasi • POS Terkunci
+              </div>
+            </div>
+            <p class="page-subtitle">Sistem absensi masuk & pulang dengan foto selfie terverifikasi</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <button type="button" class="btn-outline-sm btn-kiosk-exit" id="btn-kiosk-back-to-login" style="display:none; align-items:center; gap:8px; font-weight:700; padding:8px 16px; border-radius:var(--radius-sm); border:1.5px solid var(--primary); color:var(--primary); background:rgba(75, 21, 30, 0.05); cursor:pointer; min-height:44px;">
+              <i data-lucide="log-out" style="width:16px; height:16px;"></i> Kembali ke Layar Login
+            </button>
+            <div class="attendance-clock-badge">
+              <i data-lucide="clock" style="width:22px; height:22px; color:var(--primary);"></i>
+              <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                <span id="att-clock-time" style="font-size:22px; font-weight:800; color:var(--primary); font-family:monospace; line-height:1;">00:00:00</span>
+                <span id="att-clock-date" style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px;">-</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="attendance-kiosk-layout">
+          <!-- Kiri: Kartu Aksi Absen -->
+          <div class="card attendance-action-card">
+            <h3 style="font-size:16px; font-weight:800; color:var(--text-main); margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="user-check" style="color:var(--primary); width:20px; height:20px;"></i>
+              Formulir Kehadiran
+            </h3>
+
+            <div class="form-group">
+              <label>Pilih Karyawan / Staf</label>
+              <select id="att-select-user">
+                <option value="">-- Pilih Nama Karyawan --</option>
+                <!-- Rendered dynamically -->
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>PIN Karyawan (Password)</label>
+              <input type="password" id="att-input-pin" placeholder="Masukkan PIN Anda" maxlength="10" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label>Jadwal Shift</label>
+              <select id="att-select-shift">
+                <option value="SHIFT_PAGI">Shift Pagi (08:00 - 16:00)</option>
+                <option value="SHIFT_SIANG">Shift Siang (14:00 - 22:00)</option>
+                <option value="SHIFT_FULL">Shift General (09:00 - 18:00)</option>
+              </select>
+            </div>
+
+            <!-- Status Terkini Karyawan Terpilih -->
+            <div id="att-user-status-card" class="att-status-indicator" style="display:none;">
+              <div class="att-status-dot" id="att-status-dot"></div>
+              <div id="att-user-status-text" style="font-size:13px; font-weight:600;">-</div>
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+              <label>Catatan Tambahan (Opsional)</label>
+              <input type="text" id="att-input-notes" placeholder="Contoh: Menggantikan shift, lembur...">
+            </div>
+
+            <div class="att-btn-group">
+              <button type="button" class="btn-kiosk-clockin" id="btn-trigger-clockin">
+                <i data-lucide="camera"></i> Buka Kamera & Absen Masuk (Clock In)
+              </button>
+              <button type="button" class="btn-kiosk-clockout" id="btn-trigger-clockout" style="display:none;">
+                <i data-lucide="log-out"></i> Absen Pulang (Clock Out)
+              </button>
+            </div>
+          </div>
+
+          <!-- Kanan: Live Feed Kehadiran Hari Ini -->
+          <div class="card attendance-today-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <div>
+                <h3 style="font-size:16px; font-weight:800; color:var(--text-main); margin-bottom:2px;">Kehadiran Hari Ini</h3>
+                <span style="font-size:12px; color:var(--text-muted);" id="att-today-count-badge">0 Karyawan Hadir</span>
+              </div>
+              <button type="button" class="btn-outline-sm icon-only" id="btn-refresh-att-today" title="Segarkan Data">
+                <i data-lucide="refresh-cw"></i>
+              </button>
+            </div>
+
+            <div class="att-today-list" id="att-today-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. REKAP & AUDIT KEHADIRAN (Khusus Admin) -->
+      <section id="attendance-report" class="page-view admin-only">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Rekap & Audit Kehadiran</h2>
+            <p class="page-subtitle">Pantau jam kerja, keterlambatan, dan verifikasi foto selfie staf</p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button type="button" class="btn-outline-sm" id="btn-open-manage-shifts">
+              <i data-lucide="clock"></i> Atur Jadwal Shift
+            </button>
+            <button type="button" class="btn-outline-sm" id="btn-export-att-excel">
+              <i data-lucide="download"></i> Ekspor Excel
+            </button>
+            <button type="button" class="btn-primary-sm" id="btn-export-att-pdf">
+              <i data-lucide="printer"></i> Cetak PDF Rekap
+            </button>
+          </div>
+        </header>
+
+        <!-- KPI Metrics Row -->
+        <div class="metrics-row" style="margin-bottom:20px;">
+          <div class="metric-item">
+            <span class="metric-label">Total Absensi Tercatat</span>
+            <span class="metric-val" id="metric-att-total">0</span>
+            <span class="metric-sub">Sesuai filter aktif</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Tepat Waktu</span>
+            <span class="metric-val" id="metric-att-ontime" style="color:#15803D;">0</span>
+            <span class="metric-sub">Sesuai jadwal shift</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Terlambat</span>
+            <span class="metric-val" id="metric-att-late" style="color:#B45309;">0</span>
+            <span class="metric-sub">Melebihi toleransi waktu</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Total Akumulasi Jam</span>
+            <span class="metric-val" id="metric-att-hours">0 Jam</span>
+            <span class="metric-sub">Total jam operasional</span>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="card" style="margin-bottom:16px; padding:14px 16px;">
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:12.5px; font-weight:600; color:var(--text-secondary);">Periode:</span>
+              <select id="att-report-period" class="compact-select" style="min-height:36px; padding:4px 10px; border-radius:var(--radius-sm); border:1px solid var(--border-color); font-size:13px; font-family:inherit;">
+                <option value="TODAY">Hari Ini</option>
+                <option value="LAST_7_DAYS">7 Hari Terakhir</option>
+                <option value="THIS_MONTH" selected>Bulan Ini</option>
+                <option value="ALL">Semua Riwayat</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:12.5px; font-weight:600; color:var(--text-secondary);">Karyawan:</span>
+              <select id="att-report-user-filter" class="compact-select" style="min-height:36px; padding:4px 10px; border-radius:var(--radius-sm); border:1px solid var(--border-color); font-size:13px; font-family:inherit;">
+                <option value="ALL">Semua Karyawan</option>
+                <!-- Rendered dynamically -->
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:58px; text-align:center;">Foto</th>
+                  <th>Nama Karyawan</th>
+                  <th style="min-width:95px;">Tanggal</th>
+                  <th style="min-width:140px;">Shift</th>
+                  <th style="min-width:85px;">Masuk</th>
+                  <th style="min-width:85px;">Pulang</th>
+                  <th style="min-width:95px;">Durasi</th>
+                  <th style="min-width:125px;">Status</th>
+                  <th style="text-align:right; min-width:96px; width:100px;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-attendance-report">
+                <!-- JS Render -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Modal Pembayaran (Dengan Tablet On-Screen Numpad) -->
+  <div class="modal-overlay" id="modal-payment">
+    <div class="modal-card">
+      <h3>Konfirmasi Pembayaran</h3>
+      <div class="payment-total-box">
+        <span class="overview-header-label">Total Pembayaran</span>
+        <h2 id="payment-total-amount">Rp 0</h2>
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Metode Pembayaran</label>
+        <div class="payment-methods">
+          <button class="pay-method active" data-method="TUNAI"><i data-lucide="banknote"></i> Tunai</button>
+          <button class="pay-method" data-method="QRIS"><i data-lucide="qr-code"></i> QRIS</button>
+          <button class="pay-method" data-method="TRANSFER"><i data-lucide="credit-card"></i> Transfer</button>
+        </div>
+      </div>
+
+      <div id="cash-input-section">
+        <div class="form-group">
+          <label>Uang Diterima (Rp)</label>
+          <div class="input-with-prefix">
+            <span>Rp</span>
+            <input type="text" id="input-cash-amount" placeholder="0" readonly>
+          </div>
+          <div class="quick-cash-btns" id="quick-cash-container">
+            <!-- Rendered dynamically -->
+          </div>
+          
+          <!-- Tablet On-Screen Numpad for Speed -->
+          <div class="tablet-numpad">
+            <button class="btn-numpad" onclick="appendNumpad('1')">1</button>
+            <button class="btn-numpad" onclick="appendNumpad('2')">2</button>
+            <button class="btn-numpad" onclick="appendNumpad('3')">3</button>
+            <button class="btn-numpad" onclick="appendNumpad('4')">4</button>
+            <button class="btn-numpad" onclick="appendNumpad('5')">5</button>
+            <button class="btn-numpad" onclick="appendNumpad('6')">6</button>
+            <button class="btn-numpad" onclick="appendNumpad('7')">7</button>
+            <button class="btn-numpad" onclick="appendNumpad('8')">8</button>
+            <button class="btn-numpad" onclick="appendNumpad('9')">9</button>
+            <button class="btn-numpad action" onclick="clearNumpad()">C</button>
+            <button class="btn-numpad" onclick="appendNumpad('0')">0</button>
+            <button class="btn-numpad action" onclick="backspaceNumpad()">⌫</button>
+            <button class="btn-numpad" onclick="appendNumpad('00')">00</button>
+            <button class="btn-numpad" onclick="appendNumpad('000')">000</button>
+            <button class="btn-numpad action" onclick="setExactCash()">Pas</button>
+          </div>
+        </div>
+        <div class="summary-row" style="margin-top:12px; background:var(--bg-color); padding:8px 12px; border-radius:var(--radius-sm);">
+          <span style="font-size:13px; font-weight:600;">Kembalian</span>
+          <span id="payment-change" style="font-size:15px; font-weight:700; color:var(--text-main);">Rp 0</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="this.closest('.modal-overlay').classList.remove('show')">Batal</button>
+        <button class="btn-primary" id="btn-confirm-payment" style="flex:1;">Selesaikan & Cetak</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Struk Thermal (58mm / 80mm Print Ready) -->
+  <div class="modal-overlay" id="modal-receipt">
+    <div class="modal-card" style="max-width: 380px;">
+      <div id="receipt-printable-area" class="receipt-paper">
+        <div class="receipt-header">
+          <img src="./1966-logo-black.png" alt="1966 Caffe" class="receipt-logo" style="max-height:55px; max-width:120px; object-fit:contain; margin:0 auto 6px auto; display:block;">
+          <h4 style="font-size:16px; font-weight:800; margin:2px 0; letter-spacing:0.5px;">1966 CAFFE</h4>
+          <div style="font-size:11px; color:#555;">Coffee & Eatery</div>
+          <div id="receipt-date-time">01/10/2026 14:00</div>
+          <div id="receipt-id">No: TRX-1001</div>
+          <div id="receipt-type-label">Tipe: Dine In</div>
+        </div>
+        <table class="receipt-table" id="receipt-items-table">
+          <!-- JS Render -->
+        </table>
+        <div class="receipt-divider"></div>
+        <table class="receipt-table">
+          <tr>
+            <td>Subtotal</td>
+            <td style="text-align:right;" id="receipt-subtotal">Rp 0</td>
+          </tr>
+          <tr id="receipt-discount-row" style="display:none;">
+            <td>Diskon</td>
+            <td style="text-align:right;" id="receipt-discount">-Rp 0</td>
+          </tr>
+          <tr>
+            <td>Pajak (PB1)</td>
+            <td style="text-align:right;" id="receipt-tax">Rp 0</td>
+          </tr>
+          <tr style="font-weight:700; font-size:13px;">
+            <td>TOTAL</td>
+            <td style="text-align:right;" id="receipt-total">Rp 0</td>
+          </tr>
+          <tr>
+            <td id="receipt-method-label">TUNAI</td>
+            <td style="text-align:right;" id="receipt-paid">Rp 0</td>
+          </tr>
+          <tr id="receipt-change-row">
+            <td>Kembalian</td>
+            <td style="text-align:right;" id="receipt-change">Rp 0</td>
+          </tr>
+        </table>
+        <div class="receipt-footer" style="text-align: center; border-top: 1px dashed #444444; margin-top: 8px; padding-top: 8px;">
+          <div style="text-align: center; font-weight:600;">Terima kasih atas kunjungan Anda</div>
+          <div style="text-align: center; font-size:11px; color:#666;">1966 Caffe • Have a Great Day!</div>
+        </div>
+      </div>
+
+      <!-- Pilihan & Kontrol Printer Thermal Offline -->
+      <div style="background:var(--bg-color); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px; margin:12px 0 6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Ukuran Kertas Thermal:</span>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn-paper-width active" id="btn-paper-58" onclick="setReceiptPaperWidth(32)" style="padding:3px 8px; font-size:11px; border-radius:4px; border:1px solid var(--primary); background:var(--primary); color:#fff; cursor:pointer;">58 mm</button>
+            <button type="button" class="btn-paper-width" id="btn-paper-80" onclick="setReceiptPaperWidth(48)" style="padding:3px 8px; font-size:11px; border-radius:4px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-main); cursor:pointer;">80 mm</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button type="button" class="btn-primary" id="btn-print-bluetooth" onclick="handlePrintBluetooth()" style="flex:1; min-height:40px; font-size:12px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <i data-lucide="bluetooth" style="width:14px;height:14px;"></i> Cetak Bluetooth
+          </button>
+          <button type="button" class="btn-outline" id="btn-print-rawbt" onclick="handlePrintRawBt()" style="flex:1; min-height:40px; font-size:12px; display:inline-flex; align-items:center; justify-content:center; gap:6px;" title="Cetak via RawBT / Universal POS Driver">
+            <i data-lucide="printer" style="width:14px;height:14px;"></i> RawBT / POS
+          </button>
+        </div>
+        <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--border-color); padding-top:6px;">
+          <button type="button" onclick="handleScanBluetoothPrinter()" style="background:transparent; border:none; color:var(--primary); font-size:11px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
+            <i data-lucide="search" style="width:12px;height:12px;"></i> Cari Printer Bluetooth
+          </button>
+          <button type="button" onclick="window.print()" style="background:transparent; border:none; color:var(--text-muted); font-size:11px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+            <i data-lucide="printer" style="width:12px;height:12px;"></i> Cetak Sistem (WiFi)
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="justify-content:center; margin-top:8px;">
+        <button class="btn-outline" style="width:100%;" onclick="document.getElementById('modal-receipt').classList.remove('show')">Selesai / Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Diskon -->
+  <div class="modal-overlay" id="modal-discount">
+    <div class="modal-card">
+      <h3>Atur Diskon Pesanan</h3>
+      <div class="form-group">
+        <label>Tipe Diskon</label>
+        <select id="input-disc-type">
+          <option value="NOMINAL">Nominal Tetap (Rp)</option>
+          <option value="PERCENT">Persentase (%)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nilai Diskon</label>
+        <input type="number" id="input-disc-val" placeholder="0">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="this.closest('.modal-overlay').classList.remove('show')">Batal</button>
+        <button class="btn-primary-sm" id="btn-apply-discount">Terapkan Diskon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Catatan Item -->
+  <div class="modal-overlay" id="modal-notes">
+    <div class="modal-card">
+      <h3>Catatan Pesanan</h3>
+      <input type="hidden" id="input-notes-id">
+      <div class="form-group">
+        <label>Instruksi Khusus (Contoh: Less Sugar, Es Sedikit)</label>
+        <textarea id="input-notes-text" rows="3" placeholder="Tulis instruksi..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="this.closest('.modal-overlay').classList.remove('show')">Batal</button>
+        <button class="btn-primary-sm" id="btn-save-notes">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Menu -->
+  <div class="modal-overlay" id="modal-add-menu">
+    <div class="modal-card">
+      <h3>Tambah Menu Baru</h3>
+      <div class="form-group">
+        <label>Nama Menu / Layanan</label>
+        <input type="text" id="input-menu-name" placeholder="Misal: Espresso Double">
+      </div>
+      <div class="form-group">
+        <label>Kategori</label>
+        <select id="input-menu-category">
+          <option value="KOPI">Kopi / Coffee</option>
+          <option value="NON_KOPI">Non-Coffee</option>
+          <option value="MAKANAN">Makanan Utama</option>
+          <option value="SNACK">Snack & Pastry</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Harga Jual (Rp)</label>
+        <input type="number" id="input-menu-price" placeholder="Misal: 25000">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="this.closest('.modal-overlay').classList.remove('show')">Batal</button>
+        <button class="btn-primary-sm" id="btn-save-menu">Simpan Produk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Menu -->
+  <div class="modal-overlay" id="modal-edit-menu">
+    <div class="modal-card">
+      <h3>Edit Produk</h3>
+      <div class="form-group">
+        <label>Nama Menu / Layanan</label>
+        <input type="text" id="edit-menu-name" placeholder="Nama produk">
+      </div>
+      <div class="form-group">
+        <label>Kategori</label>
+        <select id="edit-menu-category">
+          <option value="KOPI">Kopi / Coffee</option>
+          <option value="NON_KOPI">Non-Coffee</option>
+          <option value="MAKANAN">Makanan Utama</option>
+          <option value="SNACK">Snack & Pastry</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Harga Jual (Rp)</label>
+        <input type="number" id="edit-menu-price" placeholder="Harga dalam rupiah">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="this.closest('.modal-overlay').classList.remove('show')">Batal</button>
+        <button class="btn-primary-sm" id="btn-update-menu">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Transaksi -->
+  <div class="modal-overlay" id="modal-edit-trx">
+    <div class="modal-card" style="max-width: 520px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 id="edit-trx-modal-title" style="margin-bottom:0;">Edit Transaksi</h3>
+        <span id="edit-trx-badge" class="category-tag KAFE" style="font-size:11px;">TRX-1001</span>
+      </div>
+
+      <!-- Metadata Transaksi -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Waktu Transaksi</label>
+          <input type="text" id="edit-trx-time" placeholder="08:45">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Metode Pembayaran</label>
+          <select id="edit-trx-method">
+            <option value="TUNAI">TUNAI</option>
+            <option value="QRIS">QRIS</option>
+            <option value="DEBIT">DEBIT</option>
+            <option value="TRANSFER">TRANSFER</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Tipe Pesanan</label>
+          <select id="edit-trx-type">
+            <option value="Dine In">Dine In</option>
+            <option value="Takeaway">Takeaway</option>
+            <option value="Delivery">Delivery</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Catatan / No. Meja</label>
+          <input type="text" id="edit-trx-ref" placeholder="Meja 03 / Ojol Delivery">
+        </div>
+      </div>
+
+      <!-- Items Section -->
+      <div style="border-top:1px solid var(--border-color); padding-top:12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <label style="font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:0;">Daftar Item Pesanan</label>
+          <span style="font-size:11px; color:var(--text-muted);" id="edit-trx-item-count">0 item</span>
+        </div>
+        
+        <div id="edit-trx-items-container" style="max-height:160px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:6px; background:var(--bg-color); margin-bottom:8px;">
+          <!-- Item rows rendered dynamically -->
+        </div>
+
+        <!-- Tambah Menu Baru ke Transaksi -->
+        <div style="display:flex; gap:6px;">
+          <select id="edit-trx-add-product-select" style="flex:1; min-height:36px; padding:6px 10px; font-size:12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--surface);">
+            <!-- Options populated from products -->
+          </select>
+          <button type="button" class="btn-outline" id="btn-edit-trx-add-item" style="min-height:36px; padding:6px 12px; font-size:12px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+            <i data-lucide="plus" style="width:13px;height:13px;"></i> Tambah
+          </button>
+        </div>
+      </div>
+
+      <!-- Financial Calculation Summary -->
+      <div style="background:var(--surface-subtle); border-radius:var(--radius-sm); padding:10px 12px; border:1px solid var(--border-color); margin-bottom:16px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px; display:block;">Diskon (Rp)</label>
+            <input type="number" id="edit-trx-discount" style="min-height:34px; padding:4px 8px; font-size:13px;" min="0">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px; display:block;">Pajak (Rp)</label>
+            <input type="number" id="edit-trx-tax" style="min-height:34px; padding:4px 8px; font-size:13px;" min="0">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--border-color); padding-top:6px;">
+          <span style="font-size:13px; font-weight:600;">Total Transaksi:</span>
+          <span id="edit-trx-total-preview" style="font-size:16px; font-weight:700; color:var(--primary);">Rp 0</span>
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <button class="btn-outline danger" id="btn-delete-trx" style="min-height:38px; padding:6px 12px; font-size:12px; display:inline-flex; align-items:center; gap:4px;" title="Hapus transaksi ini dari riwayat">
+          <i data-lucide="trash-2" style="width:13px;height:13px;"></i> Hapus
+        </button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-outline" style="min-height:38px; padding:6px 14px; font-size:12px;" onclick="document.getElementById('modal-edit-trx').classList.remove('show')">Batal</button>
+          <button class="btn-primary-sm" id="btn-save-edit-trx" style="min-height:38px; padding:6px 16px; font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+            <i data-lucide="check" style="width:13px;height:13px;"></i> Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Pengeluaran -->
+  <div class="modal-overlay" id="modal-add-expense">
+    <div class="modal-card" style="max-width: 480px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:36px; height:36px; border-radius:var(--radius-sm); background:rgba(239, 68, 68, 0.1); color:var(--danger); display:flex; align-items:center; justify-content:center;">
+            <i data-lucide="wallet" style="width:18px;height:18px;"></i>
+          </div>
+          <div>
+            <h3 style="margin-bottom:2px; font-size:16px;">Catat Biaya Operasional</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin:0;">Bahan baku, operasional toko, dan talangan karyawan</p>
+          </div>
+        </div>
+        <button class="btn-clear" onclick="document.getElementById('modal-add-expense').classList.remove('show')" style="padding:4px; min-height:auto;">
+          <i data-lucide="x" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Tanggal Biaya</label>
+          <input type="date" id="input-expense-date" style="min-height:38px; font-size:13px;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Alokasi Pengeluaran</label>
+          <select id="input-expense-category" style="min-height:38px; font-size:13px;">
+            <option value="KAFE">Bahan Baku & Kopi F&B</option>
+            <option value="OPERASIONAL">Operasional & Utilitas (Listrik, Wifi)</option>
+            <option value="UMUM">Biaya Umum & Pemeliharaan</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Pilihan Sumber Dana (Kasir vs Talangan Karyawan) -->
+      <div class="form-group" style="margin-bottom:12px;">
+        <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Sumber Dana</label>
+        <div class="fund-radio-grid">
+          <label class="fund-radio-card active" id="card-fund-kasir">
+            <input type="radio" name="add-expense-fund" value="KASIR" checked>
+            <div>
+              <span class="fund-radio-title">💰 Kas Toko / Kasir</span>
+              <span class="fund-radio-desc">Potong uang tunai laci kasir hari ini</span>
+            </div>
+          </label>
+          <label class="fund-radio-card" id="card-fund-karyawan">
+            <input type="radio" name="add-expense-fund" value="KARYAWAN">
+            <div>
+              <span class="fund-radio-title">👤 Talangan Karyawan</span>
+              <span class="fund-radio-desc">Pakai uang pribadi, kas kasir belum berkurang</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Input Dinamis Nama Karyawan & Status Penggantian -->
+      <div id="add-expense-employee-container" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:8px;">
+          <label style="font-size:11px; font-weight:600; color:#92400E; margin-bottom:4px; display:block;">Nama Karyawan yang Menalangi *</label>
+          <input type="text" id="input-expense-employee" placeholder="Contoh: Budi, Siti, Rian..." style="min-height:36px; font-size:13px; background:#FFFFFF;">
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#78350F; cursor:pointer;">
+          <input type="checkbox" id="input-expense-reimbursed-now" style="accent-color:#D97706; width:15px; height:15px;">
+          <span>Uang talangan sudah langsung diganti kasir sekarang</span>
+        </label>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Keterangan Biaya / Belanja</label>
+        <input type="text" id="input-expense-desc" placeholder="Misal: Beli Susu Fresh Milk 6 Liter di Swalayan" style="font-size:13px;">
+      </div>
+
+      <div class="form-group" style="margin-bottom:18px;">
+        <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Nominal (Rp)</label>
+        <input type="number" id="input-expense-amount" placeholder="Misal: 95000" min="100" style="font-size:14px; font-weight:600;">
+      </div>
+
+      <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn-outline" type="button" onclick="document.getElementById('modal-add-expense').classList.remove('show')">Batal</button>
+        <button class="btn-primary-sm" id="btn-save-expense" style="min-height:40px; padding:8px 18px;">
+          <i data-lucide="check" style="width:14px;height:14px;"></i> Simpan Pengeluaran
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Pengeluaran -->
+  <div class="modal-overlay" id="modal-edit-expense">
+    <div class="modal-card" style="max-width: 480px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:36px; height:36px; border-radius:var(--radius-sm); background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center;">
+            <i data-lucide="edit-3" style="width:18px;height:18px;"></i>
+          </div>
+          <div>
+            <h3 style="margin-bottom:2px; font-size:16px;">Ubah Catatan Biaya</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin:0;" id="edit-expense-subtitle">Perbarui rincian atau status penggantian</p>
+          </div>
+        </div>
+        <button class="btn-clear" onclick="document.getElementById('modal-edit-expense').classList.remove('show')" style="padding:4px; min-height:auto;">
+          <i data-lucide="x" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Tanggal Biaya</label>
+          <input type="date" id="edit-expense-date" style="min-height:38px; font-size:13px;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Alokasi Pengeluaran</label>
+          <select id="edit-expense-category" style="min-height:38px; font-size:13px;">
+            <option value="KAFE">Bahan Baku & Kopi F&B</option>
+            <option value="OPERASIONAL">Operasional & Utilitas (Listrik, Wifi)</option>
+            <option value="UMUM">Biaya Umum & Pemeliharaan</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Pilihan Sumber Dana Edit -->
+      <div class="form-group" style="margin-bottom:12px;">
+        <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Sumber Dana</label>
+        <div class="fund-radio-grid">
+          <label class="fund-radio-card" id="edit-card-fund-kasir">
+            <input type="radio" name="edit-expense-fund" value="KASIR">
+            <div>
+              <span class="fund-radio-title">💰 Kas Toko / Kasir</span>
+              <span class="fund-radio-desc">Potong kas laci kasir toko</span>
+            </div>
+          </label>
+          <label class="fund-radio-card" id="edit-card-fund-karyawan">
+            <input type="radio" name="edit-expense-fund" value="KARYAWAN">
+            <div>
+              <span class="fund-radio-title">👤 Talangan Karyawan</span>
+              <span class="fund-radio-desc">Uang pribadi karyawan</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Input Dinamis Edit Karyawan & Status Penggantian -->
+      <div id="edit-expense-employee-container" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:8px;">
+          <label style="font-size:11px; font-weight:600; color:#92400E; margin-bottom:4px; display:block;">Nama Karyawan *</label>
+          <input type="text" id="edit-expense-employee" placeholder="Nama karyawan..." style="min-height:36px; font-size:13px; background:#FFFFFF;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:11px; font-weight:600; color:#92400E; margin-bottom:4px; display:block;">Status Penggantian (Reimbursement)</label>
+          <select id="edit-expense-reimb-status" style="min-height:36px; font-size:13px; background:#FFFFFF;">
+            <option value="PENDING">🟡 Belum Diganti Kasir (Menunggu Penggantian)</option>
+            <option value="SETTLED">🟢 Sudah Diganti Kasir (Lunas)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Keterangan Biaya / Belanja</label>
+        <input type="text" id="edit-expense-desc" style="font-size:13px;">
+      </div>
+
+      <div class="form-group" style="margin-bottom:18px;">
+        <label style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; display:block;">Nominal (Rp)</label>
+        <input type="number" id="edit-expense-amount" min="100" style="font-size:14px; font-weight:600;">
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <button class="btn-outline danger" id="btn-delete-expense" type="button" style="min-height:38px; padding:6px 12px; font-size:12px; display:inline-flex; align-items:center; gap:4px;" title="Hapus catatan pengeluaran ini">
+          <i data-lucide="trash-2" style="width:13px;height:13px;"></i> Hapus
+        </button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-outline" type="button" onclick="document.getElementById('modal-edit-expense').classList.remove('show')">Batal</button>
+          <button class="btn-primary-sm" id="btn-save-edit-expense" style="min-height:38px; padding:6px 16px; font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+            <i data-lucide="check" style="width:13px;height:13px;"></i> Simpan Perubahan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Pajak -->
+  <div class="modal-overlay" id="modal-add-tax">
+    <div class="modal-card">
+      <h3>Tambah Jenis Pajak / Biaya</h3>
+      <div class="form-group">
+        <label>Nama Pajak</label>
+        <input type="text" id="input-tax-name" placeholder="Misal: Pajak PB1 atau Service Charge">
+      </div>
+      <div class="form-group">
+        <label>Persentase (%)</label>
+        <input type="number" id="input-tax-pct" placeholder="Misal: 10">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="this.closest('.modal-overlay').classList.remove('show')">Batal</button>
+        <button class="btn-primary-sm" id="btn-save-tax">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Dialog Cetak & Ekspor Rekap -->
+  <div class="modal-overlay" id="modal-export-report">
+    <div class="modal-card" style="max-width: 500px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:38px; height:38px; border-radius:var(--radius-sm); background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center;">
+            <i data-lucide="file-spreadsheet" style="width:20px;height:20px;"></i>
+          </div>
+          <div>
+            <h3 style="margin-bottom:2px; font-size:16px;">Cetak & Ekspor Rekap Penjualan</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin:0;">Pilih kriteria rekapan data penjualan</p>
+          </div>
+        </div>
+        <button class="btn-clear" onclick="document.getElementById('modal-export-report').classList.remove('show')" style="padding:4px; min-height:auto;">
+          <i data-lucide="x" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+
+      <!-- 1. PILIH KATEGORI PENJUALAN -->
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:8px; display:block;">
+          1. Pilih Kategori Penjualan
+        </label>
+        <div class="export-options-grid service-options" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+          <div class="export-radio-card active" data-export-service="ALL" id="card-service-all">
+            <i data-lucide="layers" style="width:20px;height:20px;"></i>
+            <span class="card-title">Semua Menu</span>
+            <span class="card-desc">Seluruh Penjualan F&B</span>
+          </div>
+          <div class="export-radio-card" data-export-service="KAFE" id="card-service-kafe">
+            <i data-lucide="coffee" style="width:20px;height:20px;"></i>
+            <span class="card-title">Minuman & Kopi</span>
+            <span class="card-desc">Kopi & Non-Kopi</span>
+          </div>
+          <div class="export-radio-card" data-export-service="CUCI" id="card-service-cuci">
+            <i data-lucide="utensils" style="width:20px;height:20px;"></i>
+            <span class="card-title">Makanan & Snack</span>
+            <span class="card-desc">Makanan & Cemilan</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. PILIH PERIODE WAKTU -->
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:8px; display:block;">
+          2. Pilih Periode Waktu
+        </label>
+        <select id="export-period-select" style="margin-bottom: 8px;">
+          <option value="today">Hari Ini</option>
+          <option value="yesterday">Kemarin</option>
+          <option value="week">7 Hari Terakhir</option>
+          <option value="month">Bulan Ini</option>
+          <option value="all">Semua Riwayat</option>
+          <option value="custom">Rentang Tanggal Kustom...</option>
+        </select>
+        
+        <!-- Rentang tanggal kustom -->
+        <div id="export-custom-date-container" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+          <div>
+            <label style="font-size:11px; color:var(--text-muted); margin-bottom:4px; display:block;">Mulai Tanggal</label>
+            <input type="date" id="export-date-start" style="font-size:12px; min-height:38px;">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-muted); margin-bottom:4px; display:block;">Sampai Tanggal</label>
+            <input type="date" id="export-date-end" style="font-size:12px; min-height:38px;">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. PILIH TIPE FILE -->
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:8px; display:block;">
+          3. Pilih Tipe File
+        </label>
+        <div class="export-options-grid format-options" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="export-radio-card active" data-export-format="PDF" id="card-format-pdf">
+            <i data-lucide="printer" style="width:22px;height:22px; color:var(--primary);"></i>
+            <span class="card-title">Dokumen PDF</span>
+            <span class="card-desc">Cetak struk / simpan PDF</span>
+          </div>
+          <div class="export-radio-card" data-export-format="EXCEL" id="card-format-excel">
+            <i data-lucide="file-spreadsheet" style="width:22px;height:22px; color:#107c41;"></i>
+            <span class="card-title">File Excel</span>
+            <span class="card-desc">Spreadsheet rekap (.xls)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE PREVIEW DATA BADGE -->
+      <div id="export-preview-badge" style="background:var(--bg-color); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:18px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="color:var(--text-secondary); display:flex; align-items:center; gap:6px;">
+          <i data-lucide="check-circle" style="width:15px;height:15px; color:var(--success);"></i>
+          <span><strong id="export-matched-count">0 Transaksi</strong> terpilih</span>
+        </div>
+        <div style="font-weight:700; color:var(--primary); font-size:14px;" id="export-matched-total">Rp 0</div>
+      </div>
+
+      <!-- MODAL ACTIONS -->
+      <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn-outline" type="button" onclick="document.getElementById('modal-export-report').classList.remove('show')">Batal</button>
+        <button class="btn-primary" type="button" id="btn-process-export" style="width:auto; min-height:42px; padding:10px 20px;">
+          <i data-lucide="printer" id="btn-process-icon" style="width:16px;height:16px;"></i>
+          <span id="btn-process-text">Cetak / Simpan PDF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Anggota Baru -->
+  <div class="modal-overlay" id="modal-add-user">
+    <div class="modal-card">
+      <h3>Tambah Anggota / Kasir Baru</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Tambahkan akun kasir atau admin baru untuk operasional toko.</p>
+      
+      <form id="form-add-user" onsubmit="event.preventDefault(); window.saveNewUser();">
+        <div class="form-group">
+          <label>Nama Lengkap <span style="color:var(--danger);">*</span></label>
+          <input type="text" id="user-add-name" placeholder="contoh: Budi Santoso" required>
+        </div>
+        <div class="form-group">
+          <label>Username Login <span style="color:var(--danger);">*</span></label>
+          <input type="text" id="user-add-username" placeholder="contoh: budi_kasir" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label>Password / PIN Akses <span style="color:var(--danger);">*</span></label>
+          <input type="password" id="user-add-pin" placeholder="Minimal 4 karakter" autocomplete="new-password" required>
+        </div>
+        <div class="form-group">
+          <label>Hak Akses / Role</label>
+          <select id="user-add-role">
+            <option value="KASIR">Kasir (POS, Riwayat Transaksi, & Biaya)</option>
+            <option value="ADMIN">Administrator (Akses Penuh Seluruh Sistem)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>No. HP / WhatsApp (Opsional)</label>
+          <input type="text" id="user-add-phone" placeholder="081234567890">
+        </div>
+        <div class="form-group">
+          <label>Status Akun</label>
+          <select id="user-add-status">
+            <option value="ACTIVE">Aktif (Dapat Login)</option>
+            <option value="INACTIVE">Nonaktif (Akses Ditangguhkan)</option>
+          </select>
+        </div>
+        
+        <div class="modal-actions" style="margin-top:20px;">
+          <button type="button" class="btn-outline" onclick="closeAddUserModal()">Batal</button>
+          <button type="submit" class="btn-primary" id="btn-save-new-user">Simpan Anggota</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Edit Anggota -->
+  <div class="modal-overlay" id="modal-edit-user">
+    <div class="modal-card">
+      <h3>Edit Data Anggota</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Perbarui data atau hak akses anggota kasir.</p>
+      
+      <form id="form-edit-user" onsubmit="event.preventDefault(); window.saveEditUser();">
+        <input type="hidden" id="user-edit-id">
+        <div class="form-group">
+          <label>Nama Lengkap <span style="color:var(--danger);">*</span></label>
+          <input type="text" id="user-edit-name" required>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="user-edit-username" disabled style="background:var(--bg-color); cursor:not-allowed;">
+          <small style="font-size:11px; color:var(--text-muted); margin-top:3px; display:block;">Username unik permanen tidak dapat diubah.</small>
+        </div>
+        <div class="form-group">
+          <label>Password / PIN Saat Ini (Hak Akses Admin)</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="password" id="user-edit-current-pin" readonly style="background:var(--bg-color); font-family:monospace; font-weight:600; letter-spacing:0.5px; color:var(--text-main); flex:1;">
+            <button type="button" class="btn-outline" id="btn-toggle-edit-pin" onclick="toggleEditCurrentPin()" style="min-height:42px; padding:0 12px;" title="Lihat / Sembunyikan Password">
+              <i data-lucide="eye" id="icon-toggle-edit-pin" style="width:15px;height:15px;"></i>
+            </button>
+          </div>
+          <small style="font-size:11px; color:var(--text-muted); margin-top:3px; display:block;">Admin dapat melihat password kasir jika kasir lupa password.</small>
+        </div>
+        <div class="form-group">
+          <label>Ganti Password Baru (Opsional)</label>
+          <input type="text" id="user-edit-pin" placeholder="Isi hanya jika ingin mengubah password baru" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label>Hak Akses / Role</label>
+          <select id="user-edit-role">
+            <option value="KASIR">Kasir (POS, Riwayat Transaksi, & Biaya)</option>
+            <option value="ADMIN">Administrator (Akses Penuh Seluruh Sistem)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>No. HP / WhatsApp</label>
+          <input type="text" id="user-edit-phone" placeholder="081234567890">
+        </div>
+        <div class="form-group">
+          <label>Status Akun</label>
+          <select id="user-edit-status">
+            <option value="ACTIVE">Aktif (Dapat Login)</option>
+            <option value="INACTIVE">Nonaktif (Akses Ditangguhkan)</option>
+          </select>
+        </div>
+        
+        <div class="modal-actions" style="margin-top:20px;">
+          <button type="button" class="btn-outline" onclick="closeEditUserModal()">Batal</button>
+          <button type="submit" class="btn-primary" id="btn-save-edit-user">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Kamera Selfie Absensi -->
+  <div class="modal-overlay" id="modal-camera-attendance">
+    <div class="modal-card" style="max-width:440px; text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="text-align:left;">
+          <h3 style="margin-bottom:2px; font-size:17px;" id="modal-cam-title">Foto Selfie Absen Masuk</h3>
+          <span style="font-size:12px; color:var(--text-muted);" id="modal-cam-user-name">Nama Karyawan</span>
+        </div>
+        <button type="button" class="btn-clear" id="btn-close-camera-modal" style="min-height:36px; min-width:36px;"><i data-lucide="x"></i></button>
+      </div>
+
+      <!-- Viewfinder Area -->
+      <div class="camera-viewport-container">
+        <video id="att-camera-video" autoplay playsinline muted></video>
+        <canvas id="att-capture-canvas" style="display:none;"></canvas>
+        <img id="att-captured-preview-img" style="display:none;" alt="Preview Selfie">
+        
+        <!-- Live Guide Overlay -->
+        <div class="camera-guide-overlay" id="camera-guide-overlay">
+          <div class="camera-face-oval"></div>
+          <span class="camera-guide-text">Posisikan wajah Anda di dalam lingkaran</span>
+        </div>
+
+        <div class="camera-flash" id="camera-flash"></div>
+      </div>
+
+      <!-- Fallback Input File jika Kamera Web Diblokir/Tidak Didukung -->
+      <input type="file" id="att-camera-file-input" accept="image/*" capture="user" style="display:none;">
+
+      <!-- Kontrol Tombol -->
+      <div class="camera-controls-wrapper" style="margin-top:16px;">
+        <!-- State 1: Live Streaming -->
+        <div id="cam-controls-live" style="display:flex; flex-direction:column; gap:10px;">
+          <button type="button" class="btn-primary" id="btn-take-selfie" style="min-height:48px; font-size:15px; border-radius:9999px;">
+            <i data-lucide="camera"></i> Ambil Foto Sekarang
+          </button>
+          <button type="button" class="btn-outline" id="btn-use-fallback-upload" style="font-size:12px; padding:6px;">
+            <i data-lucide="upload"></i> Alternatif: Ambil via Kamera HP / Upload File
+          </button>
+        </div>
+
+        <!-- State 2: Preview Hasil Foto -->
+        <div id="cam-controls-preview" style="display:none; gap:10px;">
+          <button type="button" class="btn-outline" id="btn-retake-selfie" style="flex:1; min-height:44px;">
+            <i data-lucide="refresh-cw"></i> Ulangi
+          </button>
+          <button type="button" class="btn-primary" id="btn-confirm-save-selfie" style="flex:2; min-height:44px;">
+            <i data-lucide="check"></i> Simpan Absensi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detail Bukti Foto Selfie -->
+  <div class="modal-overlay" id="modal-attendance-photo-detail">
+    <div class="modal-card" style="max-width:400px; text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size:16px;">Bukti Foto Kehadiran</h3>
+        <button type="button" class="btn-clear" id="btn-close-photo-detail"><i data-lucide="x"></i></button>
+      </div>
+      <div class="att-photo-detail-frame">
+        <img id="att-detail-img" src="" alt="Bukti Selfie">
+      </div>
+      <div style="margin-top:14px; text-align:left; background:var(--bg-color); padding:12px; border-radius:var(--radius-md); font-size:13px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="color:var(--text-muted);">Nama Staf:</span>
+          <strong id="att-detail-name">-</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="color:var(--text-muted);">Tanggal & Shift:</span>
+          <span id="att-detail-datetime">-</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="color:var(--text-muted);">Jam Masuk / Pulang:</span>
+          <span id="att-detail-times">-</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:var(--text-muted);">Status:</span>
+          <span id="att-detail-status">-</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Kelola & Edit Jadwal Shift Kerja -->
+  <div class="modal-overlay" id="modal-manage-shifts">
+    <div class="modal-card" style="max-width: 520px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:16.5px; margin-bottom:2px;">Atur Jadwal Shift Kerja</h3>
+          <p style="font-size:12px; color:var(--text-muted);">Kelola jam operasional dan toleransi keterlambatan staf</p>
+        </div>
+        <button type="button" class="btn-clear" id="btn-close-manage-shifts" style="padding:6px; color:var(--text-muted); cursor:pointer;">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Shift Items List -->
+      <div id="shift-manager-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px; max-height:280px; overflow-y:auto; padding-right:2px;">
+        <!-- JS Rendered -->
+      </div>
+
+      <!-- Form Tambah / Edit Shift Inline -->
+      <div id="shift-form-card" class="card" style="padding:14px; background:var(--bg-color); border:1px dashed var(--border-color); display:none; margin-bottom:16px;">
+        <h4 id="shift-form-title" style="font-size:13.5px; font-weight:700; margin-bottom:10px; color:var(--primary);">Tambah Shift Baru</h4>
+        <input type="hidden" id="shift-form-id">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:12px;">Nama Shift</label>
+          <input type="text" id="shift-form-name" placeholder="Contoh: Shift Pagi, Shift Ramadhan..." autocomplete="off">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:12px;">Jam Mulai (Masuk)</label>
+            <input type="time" id="shift-form-start">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:12px;">Jam Selesai (Pulang)</label>
+            <input type="time" id="shift-form-end">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-size:12px;">Toleransi Keterlambatan (Menit)</label>
+          <input type="number" id="shift-form-grace" min="0" max="120" value="15" placeholder="Contoh: 15">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn-outline-sm" id="btn-cancel-shift-form" style="min-height:36px; padding:6px 14px; font-size:12px;">Batal</button>
+          <button type="button" class="btn-primary-sm" id="btn-save-shift-form" style="min-height:36px; padding:6px 16px; font-size:12px;">Simpan Shift</button>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:14px;">
+        <button type="button" class="btn-outline-sm" id="btn-add-new-shift" style="min-height:38px; font-size:12.5px;">
+          <i data-lucide="plus"></i> Tambah Shift Baru
+        </button>
+        <button type="button" class="btn-clear" id="btn-reset-default-shifts" style="font-size:12px; color:var(--text-muted); cursor:pointer;" title="Kembalikan shift ke konfigurasi default">
+          <i data-lucide="rotate-ccw" style="width:13px; height:13px; vertical-align:middle; margin-right:3px;"></i> Reset Default
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Area Dokumen Cetak / Simpan PDF Rekapitulasi (Khusus Mode Print) -->
+  <div id="report-printable-area" style="display:none;"></div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

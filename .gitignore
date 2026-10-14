@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment Variables & Secrets (CRITICAL SECURITY)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.keystore
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & OS files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+
+# Internal agent configurations & prompts
+.agents/
+.github/prompts/
+.gemini/
+
+# Scratch Developer Scripts & Heavy Guide Assets
+capture-guide.js
+generate-android-icons.js
+generate-guide-pdf.js
+generate-permission-assets.js
+test-login-user.js
+docs/Buku_Panduan_Penggunaan_POS_Raya_Koffie.pdf
+docs/Buku_Panduan_Penggunaan_POS_Raya_Koffie.html
+docs/guide-assets/
+
+# Root image drafts (assets already served properly from public/)
+1966.jpeg
+1966-logo-badge.png
+1966-logo-black.png
+1966-logo-white.png
+
+# Android build cache & release artifacts
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+*.apk
+*.aab
+
+# Unused Vite template starter files
+src/counter.js
+src/main.js
+src/style.css
+src/assets/
