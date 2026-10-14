@@ -1,224 +1,195 @@
 <p align="center">
-  <img src="public/1966-logo-badge.png" width="140" alt="Logo 1966 Caffe" />
+  <img src="public/1966-logo-badge.png" width="150" alt="Logo 1966 Caffe" />
 </p>
 
-<h1 align="center">POS 1966 Caffe</h1>
+<h1 align="center">1966 Caffe — Point of Sale (POS) & Operational System</h1>
 
 <p align="center">
-  Aplikasi Point of Sale (Kasir) dan Manajemen Operasional hybrid berbasis web serta tablet Android dengan konsep <strong>100% Offline-First</strong>. Dirancang khusus untuk operasional harian kedai kopi & resto <strong>1966 Caffe</strong>.
+  Sistem Point of Sale (Kasir) dan Manajemen Operasional F&B modern dengan arsitektur <strong>100% Offline-First</strong>. Dirancang khusus untuk efisiensi transaksi, manajemen shift & kehadiran, pencatatan pengeluaran, serta rekapitulasi omset harian kedai kopi & restoran <strong>1966 Caffe</strong>.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Android%20Tablet%20%7C%20Web-blue?style=flat-square" alt="Platform" />
-  <img src="https://img.shields.io/badge/Framework-Capacitor%208%20%2B%20Vite%208-green?style=flat-square" alt="Framework" />
-  <img src="https://img.shields.io/badge/Database-Offline%20LocalStorage-orange?style=flat-square" alt="Database" />
-  <img src="https://img.shields.io/badge/Thermal%20Print-Web%20Bluetooth%20ESC%2FPOS-purple?style=flat-square" alt="Thermal Print" />
+  <a href="https://github.com/SyafiqSiregar/1966-POS-System"><img src="https://img.shields.io/badge/Platform-Web%20%7C%20Android%20Tablet%20%7C%20PWA-4B151E?style=flat-square" alt="Platform" /></a>
+  <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Build%20Tool-Vite%208-B85D36?style=flat-square" alt="Vite" /></a>
+  <img src="https://img.shields.io/badge/Architecture-Offline--First%20LocalStorage-241416?style=flat-square" alt="Offline-First" />
+  <img src="https://img.shields.io/badge/Thermal%20Printer-ESC%2FPOS%20Bluetooth%2058%2F80mm-15803D?style=flat-square" alt="Thermal Print" />
+  <a href="https://vercel.com/"><img src="https://img.shields.io/badge/Deploy-Vercel%20Ready-000000?style=flat-square" alt="Vercel Ready" /></a>
   <img src="https://img.shields.io/badge/Version-2.0.0-emerald?style=flat-square" alt="Version" />
 </p>
 
 ---
 
-## Daftar Isi
-- [Gambaran Umum](#gambaran-umum)
-- [Tangkapan Layar](#tangkapan-layar)
-- [Fitur Utama](#fitur-utama)
-- [Kredensial Akun Awal](#kredensial-akun-awal)
-- [Teknologi yang Digunakan](#teknologi-yang-digunakan)
-- [Struktur Direktori](#struktur-direktori)
-- [Panduan Instalasi & Menjalankan](#panduan-instalasi--menjalankan)
-- [Build APK Android](#build-apk-android)
-- [Dokumentasi Lengkap](#dokumentasi-lengkap)
+## 📋 Daftar Isi
+- [Gambaran Umum](#-gambaran-umum)
+- [Fitur Utama](#-fitur-utama)
+- [Kredensial Akun Awal](#-kredensial-akun-awal)
+- [Teknologi yang Digunakan](#-teknologi-yang-digunakan)
+- [Struktur Direktori](#-struktur-direktori)
+- [Panduan Instalasi & Menjalankan](#-panduan-instalasi--menjalankan)
+- [Panduan Deploy ke Vercel](#-panduan-deploy-ke-vercel)
+- [Dukungan Printer Thermal Bluetooth](#-dukungan-printer-thermal-bluetooth)
+- [Lisensi & Hak Cipta](#-lisensi--hak-cipta)
 
 ---
 
-## Gambaran Umum
+## ☕ Gambaran Umum
 
-Aplikasi POS Raya Koffie & 439 Carwash dirancang untuk mengatasi kebutuhan kasir gabungan dalam satu antarmuka yang cepat dan ramah layar sentuh. Sistem bekerja penuh secara luring (tanpa ketergantungan koneksi internet dan cloud), menjaga privasi data, serta mengeliminasi resiko gangguan operasional akibat jaringan terputus.
+**1966 Caffe POS System** menghadirkan pengalaman kasir digital yang responsif, andal, dan ramah layar sentuh (*touchscreen-friendly*). Dibangun menggunakan web stack standar tanpa dependensi server yang rumit, aplikasi dapat beroperasi penuh tanpa koneksi internet (*offline mode*), menjaga kerahasiaan data internal, serta bebas dari risiko *downtime* akibat kendala jaringan.
 
-Aplikasi mendukung pencetakan nota langsung ke printer thermal Bluetooth (ESC/POS 58mm/80mm), ekspor laporan rekapitulasi penjualan berformat PDF resmi langsung ke penyimpanan perangkat internal, dan pembagian hak akses bertingkat antara Administrator dan Kasir.
-
----
-
-## Tangkapan Layar
-
-| Dashboard Ringkasan Keuangan | Kasir POS Kafe & Carwash |
-| :---: | :---: |
-| ![Dashboard](docs/guide-assets/02_dashboard.png) | ![POS Kafe](docs/guide-assets/03_pos_kafe.png) |
-
-| Modal Pembayaran & Kembalian | Cetak Struk Transaksi |
-| :---: | :---: |
-| ![Pembayaran](docs/guide-assets/05_modal_pembayaran.png) | ![Struk Transaksi](docs/guide-assets/06_struk_transaksi.png) |
-
-| Pencatatan Biaya Operasional | Laporan & Ekspor Omzet |
-| :---: | :---: |
-| ![Biaya Operasional](docs/guide-assets/10_biaya_operasional.png) | ![Laporan Omzet](docs/guide-assets/14_laporan_omset.png) |
+Aplikasi juga mendukung evaluasi langsung via browser (*Progressive Web App*), pencetakan struk nota transaksi via Bluetooth thermal printer (ESC/POS), dan ekspor laporan omset serta absensi karyawan dalam format **PDF eksekutif** dan **Excel (.xls)** yang tertata rapi.
 
 ---
 
-## Fitur Utama
+## ✨ Fitur Utama
 
-### 1. Transaksi Penjualan Multi-Kategori
-- Pemisahan kategori pesanan antara **Kafe** (makanan & minuman) dan **Carwash** (layanan cuci kendaraan).
-- Keranjang belanja interaktif dengan opsi kuantitas cepat dan input catatan per item.
-- Kalkulasi otomatis subtotal, diskon (nominal atau persentase), dan pajak restoran (PB1).
-- Pilihan metode pembayaran: Tunai (dengan kalkulator kembalian dan tombol nominal pas/cepat), QRIS, dan Transfer Bank.
+### 1. Kasir POS Khusus F&B (Minuman & Makanan)
+- **Katalog Terpisah**: Filter cepat untuk *Minuman & Kopi* (Espresso, Milk Based, Manual Brew, Non-Coffee) dan *Makanan & Snack* (Rice Bowl, Pasta, Pastry, Cemilan).
+- **Tipe Pesanan**: Pilihan *Dine In* (dengan nomor meja), *Takeaway* (nama pelanggan), dan *Delivery* (catatan ojol/ekspedisi).
+- **Keranjang Belanja Cepat**: Penyesuaian kuantitas instan, catatan pesanan khusus per item, serta kalkulasi otomatis subtotal, diskon (persen / nominal), dan pajak restoran (PB1).
+- **Multi-Metode Pembayaran**: Tunai (kalkulator kembalian otomatis & tombol nominal pas), QRIS, dan Transfer Bank.
 
-### 2. Integrasi Printer Thermal Bluetooth (ESC/POS)
-- Terhubung langsung ke printer thermal Bluetooth 58mm atau 80mm via Web Bluetooth API.
-- Format cetak struk profesional dengan logo kedai, nomor nota, detail pesanan, rincian pembayaran, dan ucapan terima kasih.
-- Opsi fallback cetak menggunakan protokol Android Intent (RawBT) atau dialog cetak bawaan sistem.
+### 2. Ekspor Laporan Omset Eksekutif (PDF & Excel)
+- **Dokumen PDF Resmi**: Berformat **A4 Landscape** dengan identitas visual 1966 Caffe (Burgundy `#4B151E`), 4 kartu ringkasan KPI (*Total Omset, Total Transaksi/AOV, Omset Minuman, Omset Makanan*), tabel pesanan terperinci, nomor halaman, dan blok tanda tangan validasi kasir & manajer.
+- **Spreadsheet Excel (.xls)**: XML/HTML spreadsheet berstandar UTF-8 BOM lengkap dengan kartu KPI di bagian atas, tabel zebra selang-seling yang rapi, dan format angka mata uang otomatis.
 
-### 3. Dashboard Pemantauan Real-Time
-- Statistik ringkas omzet harian dengan pemisahan pendapatan Kafe vs Carwash.
-- Pelacakan total pengeluaran kas operasional dan kalkulasi laba bersih harian.
-- Daftar 5 produk dan layanan dengan penjualan tertinggi (Top 5 Best Seller).
+### 3. Presensi & Audit Kehadiran Karyawan
+- **Clock-In & Clock-Out Mandiri**: Pencatatan waktu masuk dan pulang kerja kasir/staf dengan proteksi PIN.
+- **Jadwal Shift Fleksibel**: Pengaturan jadwal shift (pagi/sore/malam) dengan toleransi keterlambatan (*grace period*) yang dapat dikonfigurasi oleh Administrator.
+- **Ekspor Laporan Kehadiran**: Rekapitulasi presensi karyawan siap cetak/ekspor dalam format PDF Landscape dan Excel.
 
-### 4. Pengeluaran Operasional & Talangan Karyawan
-- Pencatatan pengeluaran kas harian dengan kategori jelas (bahan baku, perlengkapan cuci, operasional, dll.).
-- Dukungan pelacakan sumber dana kasir maupun talangan pribadi staf/karyawan.
-- Manajemen status penggantian dana (Reimbursement) untuk memastikan pembukuan kas tetap seimbang.
+### 4. Pembukuan Biaya Operasional & Kas Kecil (Petty Cash)
+- Pencatatan pengeluaran operasional toko (belanja biji kopi, susu, cup/packaging, listrik, perlengkapan).
+- Pelacakan sumber dana: Kas Toko vs Uang Talangan Karyawan pribadi.
+- Manajemen status penggantian dana (*Reimbursement*) agar pembukuan kasir seimbang pada akhir shift.
 
-### 5. Manajemen Produk & Layanan
-- Tambah, ubah, dan nonaktifkan menu kafe atau paket cuci tanpa menghapus data historis transaksi (soft-delete).
-- Pengaturan harga satuan dan pengelompokan kategori.
-- Dukungan upload gambar produk lokal.
+### 5. Dasbor Finansial & Analitik Real-Time
+- Pemantauan metrik finansial harian: Total Omset Kotor, Pengeluaran, dan Estimasi Laba Bersih.
+- Komparasi pendapatan kategori: *Minuman & Kopi* vs *Makanan & Snack*.
+- Peringkat 5 Menu Terlaris (*Top 5 Best Seller*) berdasarkan kuantitas dan nominal penjualan.
 
 ### 6. Kontrol Akses Berbasis Peran (RBAC)
-- **Administrator**: Akses penuh ke seluruh menu (Dashboard analitik, kelola produk, koreksi riwayat, biaya operasional, manajemen anggota tim, dan ekspor laporan omzet).
-- **Kasir**: Antarmuka terfokus untuk input transaksi penjualan, cetak struk, dan input pengeluaran kasir harian.
-- Keamanan berbasis proteksi PIN dengan opsi tampil/sembunyi di antarmuka administrasi.
-
-### 7. Ekspor Laporan Offline Langsung ke Tablet
-- Pembuatan laporan omzet berformat PDF resmi menggunakan engine jsPDF + jsPDF-AutoTable.
-- Penyimpanan dokumen langsung ke direktori memori internal tablet Android (`Documents/RayaKoffie/`) via `@capacitor/filesystem`.
-- Format unduhan berkas juga kompatibel dengan mode browser biasa.
+- **Administrator**: Memiliki hak akses menyeluruh (Dasbor Keuangan, Kelola Master Menu, Riwayat Transaksi, Biaya Operasional, Manajemen Anggota/PIN, Rekap Kehadiran, dan Pengaturan Sistem).
+- **Kasir / Staf**: Antarmuka fokus khusus untuk pemrosesan order POS, cetak nota, presensi shift, dan pencatatan biaya kasir.
 
 ---
 
-## Kredensial Akun Awal
+## 🔑 Kredensial Akun Awal
 
-Sistem menyediakan akun awal bawaan untuk mempermudah pengujian dan implementasi pertama:
+Sistem menyertakan akun bawaan untuk pengujian awal:
 
-| Peran (Role) | Username | Password / PIN | Cakupan Hak Akses |
+| Peran (Role) | Username | PIN Akses | Hak Akses Utama |
 | :--- | :--- | :--- | :--- |
-| **Admin Utama** | `admin` | `admin` | Seluruh fitur sistem dan pengaturan data |
-| **Kasir** | `kasir` | `kasir` | Transaksi kasir, cetak nota, dan input biaya |
+| **Administrator** | `admin` | `1966` | Akses penuh ke seluruh menu & konfigurasi data |
+| **Kasir** | `kasir` | `1966` | Transaksi kasir, cetak nota, dan input biaya harian |
 
-> Informasi keamanan: Kredensial dan PIN pengguna dapat diubah kapan saja melalui menu **Manajemen Anggota** oleh Administrator.
-
----
-
-## Teknologi yang Digunakan
-
-- **Frontend Core**: HTML5 Semantic, Modern Vanilla CSS3 (desain responsif ramah layar sentuh tablet), JavaScript ES6+ Modules.
-- **Build Tool & Dev Server**: [Vite 8](https://vite.dev/) untuk proses kompilasi cepat dan modular.
-- **Android Runtime**: [Capacitor 8](https://capacitorjs.com/) sebagai jembatan native WebView pada perangkat Android.
-- **Thermal Printing Engine**: Web Bluetooth API dengan ESC/POS Command Byte Encoder kustom (`thermal-printer.js`).
-- **File System Bridge**: `@capacitor/filesystem` untuk manajemen berkas lokal pada direktori internal Android.
-- **Dokumen Generator**: `jspdf` dan `jspdf-autotable` untuk pembuatan dokumen rekapitulasi penjualan.
-- **Penyimpanan Data**: `localStorage` terstruktur dengan skema koleksi JSON mandiri tanpa server luar.
+> *Catatan Keamanan*: Nama staf, peran, dan PIN dapat diubah kapan saja melalui menu **Manajemen Anggota** oleh akun Administrator.
 
 ---
 
-## Struktur Direktori
+## 🛠️ Teknologi yang Digunakan
+
+- **Core**: HTML5 Semantic, Modern Vanilla CSS3, JavaScript ES6+ (Modular).
+- **Build Tool**: [Vite 8](https://vite.dev/) — kompilasi cepat dengan Hot Module Replacement (HMR).
+- **Desain & Ikon**: Curated Typography, Burgundy Brand System `#4B151E`, dan [Lucide Icons](https://lucide.dev/).
+- **Engine Cetak Thermal**: Web Bluetooth API dengan ESC/POS Command Byte Encoder (`thermal-printer.js`).
+- **Dokumen Generator**: [jsPDF](https://github.com/parallax/jsPDF) & [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable).
+- **Penyimpanan Data**: `localStorage` terstruktur dengan skema JSON mandiri (dukungan opsional konektor Supabase client).
+
+---
+
+## 📁 Struktur Direktori
 
 ```text
-Projek kasir rayya coffe/
-├── android/                         # Proyek native Android (Capacitor wrapper & Gradle)
-│   ├── app/                         # Kode sumber aplikasi native, manifest, & ikon
-│   ├── gradlew / gradlew.bat        # Skrip build Gradle
-│   └── build.gradle                 # Konfigurasi level build Android
-├── docs/                            # Dokumentasi resmi dan aset panduan operasional
-│   ├── Buku_Panduan_Penggunaan_POS_Raya_Koffie.pdf   # Buku panduan lengkap siap cetak
-│   ├── Buku_Panduan_Penggunaan_POS_Raya_Koffie.html  # Buku panduan versi interaktif
-│   ├── guide-assets/                # Aset gambar tangkapan layar antarmuka
-│   ├── arsitektur.md                # Spesifikasi teknis arsitektur sistem
-│   ├── fitur_detail.md              # Logika bisnis dan rumus perhitungan
-│   ├── desain.md                    # Panduan desain warna dan tipografi
-│   └── ui.md                        # Panduan tata letak antarmuka
-├── public/                          # Aset statis web (ikon, favicon, logo)
-├── index.html                       # Berkas entri antarmuka tunggal (SPA)
-├── main.js                          # Logika aplikasi, state, cart, kalkulasi, & UI
-├── style.css                        # Aturan gaya visual, tema kasir, & layout tablet
-├── thermal-printer.js               # Driver komunikasi printer Bluetooth ESC/POS
-├── local-file-saver.js              # Modul penyimpanan berkas offline perangkat
-├── logo-data.js                     # Enkoding Base64 aset logo untuk struk & laporan
-├── capacitor.config.json            # Konfigurasi bundle ID dan runtime Capacitor
-├── package.json                     # Konfigurasi dependensi dan skrip proyek
-└── Raya_Koffie_POS_v2.0.apk         # Berkas instalasi APK Android siap pakai
+1966-POS-System/
+├── .env.example              # Template variabel lingkungan untuk konfigurasi opsional
+├── .gitignore                # Aturan pencegahan commit berkas rahasia & cache
+├── README.md                 # Dokumentasi utama proyek
+├── docs/                     # Dokumentasi arsitektur dan spesifikasi teknis
+│   ├── arsitektur.md         # Diagram dan alur sistem
+│   ├── desain.md             # Panduan identitas visual & warna
+│   ├── fitur_detail.md       # Logika bisnis dan rumus kalkulasi
+│   └── ui.md                 # Spesifikasi antarmuka layar
+├── index.html                # Entry point aplikasi web (Single Page Application)
+├── local-file-saver.js       # Modul pengunduhan berkas lokal perangkat (Blob Web API)
+├── logo-data.js              # Enkoding Base64 logo resmi 1966 Caffe
+├── main.js                   # Logika sentral aplikasi, state, cart, & interaksi UI
+├── package.json              # Konfigurasi dependensi dan skrip proyek
+├── package-lock.json         # Kunci versi dependensi npm
+├── public/                   # Aset publik statis (favicon, logo, ikon SVG)
+│   ├── 1966-logo-badge.png   # Logo badge utama 1966 Caffe
+│   ├── 1966-logo-black.png   # Logo monochrome hitam
+│   ├── 1966-logo-white.png   # Logo monochrome putih
+│   ├── favicon.svg           # Favicon browser
+│   └── icons.svg             # Kumpulan ikon SVG
+├── src/                      # Modul integrasi pendukung
+│   ├── api.js                # Abstraksi sinkronisasi data
+│   └── supabaseClient.js     # Klien Supabase (aman dengan environment variables)
+├── style.css                 # Sistem desain visual, tema responsif, dan animasi
+├── supabase/                 # Berkas skema basis data
+│   └── schema.sql            # Definisi tabel DDL Supabase / PostgreSQL
+├── thermal-printer.js        # Driver printer thermal Bluetooth ESC/POS
+└── vercel.json               # Konfigurasi rewrite SPA untuk hosting Vercel
 ```
 
 ---
 
-## Panduan Instalasi & Menjalankan
+## 🚀 Panduan Instalasi & Menjalankan
 
-### Prasyarat Sistem
+### Prasyarat
 - **Node.js**: Versi 18.0.0 atau yang lebih baru.
 - **NPM**: Versi 9.0.0 atau yang lebih baru.
-- **Java Development Kit (JDK)**: Versi 17 (dibutuhkan jika ingin melakukan kompilasi APK Android dari sumber).
-- **Android Studio & SDK**: Dibutuhkan untuk build native Android atau debugging via emulator/perangkat fisik.
 
-### Langkah Instalasi
-1. Clone repositori ke komputer lokal Anda:
+### Langkah Menjalankan di Komputer Lokal
+1. **Clone repositori**:
    ```bash
-   git clone https://github.com/SyafiqSiregar/Rayya-Coffe.git
-   cd Rayya-Coffe
+   git clone https://github.com/SyafiqSiregar/1966-POS-System.git
+   cd 1966-POS-System
    ```
 
-2. Pasang seluruh dependensi proyek:
+2. **Pasang dependensi**:
    ```bash
    npm install
    ```
 
-3. Jalankan server pengembangan lokal:
+3. **Jalankan server pengembangan**:
    ```bash
    npm run dev
    ```
-   Buka alamat yang tertera di terminal (contoh: `http://localhost:5173/`) pada peramban web Anda.
+   Aplikasi akan aktif di alamat lokal: `http://localhost:5173/`.
 
----
-
-## Build APK Android
-
-Proyek ini telah dikonfigurasi dengan skrip otomasi satu langkah untuk mempermudah pembuatan berkas installer APK:
-
-1. **Build APK Otomatis (1 Perintah)**:
+4. **Kompilasi paket produksi**:
    ```bash
-   npm run build:apk
-   ```
-   Perintah ini akan secara otomatis:
-   - Menjalankan build bundle web via Vite (`npm run build`).
-   - Menyinkronkan aset web ke direktori Android Capacitor (`npx cap sync android`).
-   - Mengompilasi berkas APK mode debug menggunakan Gradle Wrapper.
-
-2. **Membuka Proyek di Android Studio**:
-   Jika Anda ingin menguji langsung ke tablet kasir atau membuat build rilis tertandatangani (signed release APK):
-   ```bash
-   npm run cap:open
-   ```
-
-3. **APK Siap Pakai**:
-   Berkas APK versi siap pasang telah disediakan langsung pada repositori dengan nama berkas:
-   ```text
-   Raya_Koffie_POS_v2.0.apk
+   npm run build
    ```
 
 ---
 
-## Dokumentasi Lengkap
+## ☁️ Panduan Deploy ke Vercel
 
-Untuk panduan operasional kasir dan rincian arsitektur sistem, Anda dapat membaca berkas yang tersedia di folder `docs/`:
+Aplikasi ini sudah dilengkapi dengan berkas [`vercel.json`](vercel.json) sehingga dapat langsung di-deploy secara instan dan gratis:
 
-- [Buku Panduan Penggunaan Kasir & Admin (HTML)](docs/Buku_Panduan_Penggunaan_POS_Raya_Koffie.html)
-- [Buku Panduan Siap Cetak (PDF)](docs/Buku_Panduan_Penggunaan_POS_Raya_Koffie.pdf)
-- [Spesifikasi Teknis & Arsitektur](docs/arsitektur.md)
-- [Rincian Logika Bisnis & Perhitungan](docs/fitur_detail.md)
-- [Pedoman Desain Visual](docs/desain.md)
-- [Dokumentasi Antarmuka & Layar Tablet](docs/ui.md)
+1. Buka [https://vercel.com/new](https://vercel.com/new) dan masuk dengan akun GitHub Anda.
+2. Cari dan pilih repositori **`1966-POS-System`**, lalu klik **Import**.
+3. Vercel akan secara otomatis mendeteksi konfigurasi Vite:
+   - **Framework Preset**: `Vite`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+4. Klik **Deploy**. Dalam 1 menit, aplikasi aktif pada domain HTTPS (contoh: `https://1966-pos-system.vercel.app`).
+5. **Mode PWA (Install di HP / Tablet)**: Buka tautan Vercel tersebut di browser Chrome (Android) atau Safari (iOS), lalu pilih opsi **"Add to Home Screen"** agar aplikasi dapat dibuka dalam mode layar penuh layaknya aplikasi native.
 
 ---
 
-## Lisensi & Hak Cipta
+## 🖨️ Dukungan Printer Thermal Bluetooth
 
-Dikembangkan oleh SysDevLab untuk operasional **Raya Koffie & 439 Carwash**, Daya Asri, Tulang Bawang Barat (Tubaba), Lampung.  
-Hak Cipta dilindungi undang-undang.
+Aplikasi mendukung komunikasi langsung dengan printer thermal mini via **Web Bluetooth API**:
+- **Ukuran Kertas**: 58mm dan 80mm.
+- **Protokol**: Standar ESC/POS.
+- **Kompatibilitas**: Peramban Google Chrome pada Android, tablet, dan PC/Laptop dengan Bluetooth aktif.
+- **Format Struk**: Header logo 1966 Caffe, tanggal & jam transaksi, nomor meja / referensi, detail kuantitas & harga menu, rincian pembayaran, serta footer ucapan terima kasih.
+
+---
+
+## 📄 Lisensi & Hak Cipta
+
+© 2026 **1966 Caffe** (Specialty Coffee & Eatery).  
+Hak Cipta dilindungi undang-undang. Dikembangkan untuk efisiensi operasional POS mandiri.
