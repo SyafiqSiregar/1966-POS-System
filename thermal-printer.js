@@ -57,51 +57,131 @@ export function generateEscPosBytes(trx, paperWidth = 32) {
   esc += 'Coffee & Eatery\n';
   esc += formatDivider('=', paperWidth);
 
-  // 2. Transaction Metadata (Left-aligned)
-  esc += CMD.ALIGN_LEFT;
-  esc += `No   : ${trx.id}\n`;
-  esc += `Waktu: ${trx.date} ${trx.time}\n`;
-  esc += `Kasir: ${trx.cashierName || 'Kasir 1966'}\n`;
-  esc += `Tipe : ${trx.type} (${trx.ref || '-'})\n`;
-  esc += formatDivider('-', paperWidth);
+  if (trx.isCashbookReceipt && trx.cashbookData) {
+    const cb = trx.cashbookData;
+    const fmtSign = (n) => (n < 0 ? '-' : '') + Math.abs(n || 0).toLocaleString('id-ID');
 
-  // 3. Items List
-  if (trx.items && trx.items.length > 0) {
-    trx.items.forEach(item => {
-      const itemTitle = `${item.name}${item.notes ? ' (' + item.notes + ')' : ''}`;
-      const itemPriceStr = (item.price * item.qty).toLocaleString('id-ID');
-      esc += `${itemTitle}\n`;
-      esc += formatTwoColumns(`  ${item.qty} x ${item.price.toLocaleString('id-ID')}`, itemPriceStr, paperWidth);
-    });
+    esc += CMD.ALIGN_CENTER;
+    esc += CMD.BOLD_ON + 'BUKU KAS LACI HARIAN\n' + CMD.BOLD_OFF;
+    esc += formatDivider('-', paperWidth);
+
+    esc += CMD.ALIGN_LEFT;
+    esc += `Tanggal: ${trx.friendlyDate || trx.date}\n`;
+    esc += `Kasir  : ${trx.cashierName || 'Kasir 1966'}\n`;
+    esc += formatDivider('-', paperWidth);
+
+    esc += CMD.BOLD_ON;
+    esc += formatTwoColumns('MODAL AWAL LACI', (cb.modalAwal || 0).toLocaleString('id-ID'), paperWidth);
+    esc += CMD.BOLD_OFF;
+
+    if (cb.dayExpenses && cb.dayExpenses.length > 0) {
+      cb.dayExpenses.forEach((e, idx) => {
+        const isPending = e.fundSource === 'KARYAWAN' && e.reimbursementStatus === 'PENDING';
+        const amtStr = isPending
+          ? `(${e.amount.toLocaleString('id-ID')})`
+          : `-${e.amount.toLocaleString('id-ID')}`;
+        esc += formatTwoColumns(`${idx + 1}. ${e.desc}`, amtStr, paperWidth);
+      });
+    } else {
+      esc += '  (Tidak ada pengeluaran kas)\n';
+    }
+
+    esc += formatDivider('-', paperWidth);
+    esc += CMD.BOLD_ON;
+    esc += formatTwoColumns(
+      cb.sisaModal < 0 ? 'SISA MODAL (MINUS)' : 'SISA MODAL (SURPLUS)',
+      fmtSign(cb.sisaModal),
+      paperWidth
+    );
+    esc += CMD.BOLD_OFF;
+    esc += formatDivider('=', paperWidth);
+
+    esc += formatTwoColumns('Pendapatan', (cb.pendapatan || 0).toLocaleString('id-ID'), paperWidth);
+    if (cb.sisaModal !== 0) {
+      esc += formatTwoColumns(
+        cb.sisaModal < 0 ? 'Kurang Modal' : 'Tambah Sisa Modal',
+        (cb.sisaModal > 0 ? '+' : '') + fmtSign(cb.sisaModal),
+        paperWidth
+      );
+    }
+    esc += formatTwoColumns('Online (Non-Tunai)', '-' + (cb.online || 0).toLocaleString('id-ID'), paperWidth);
+    esc += formatDivider('-', paperWidth);
+
+    esc += CMD.BOLD_ON;
+    esc += formatTwoColumns('TOTAL TUNAI LACI', 'Rp ' + fmtSign(cb.totalTunai), paperWidth);
+    esc += CMD.BOLD_OFF;
+    esc += formatDivider('-', paperWidth);
+
+    esc += formatTwoColumns('Save (Setor Owner)', 'Rp ' + (cb.saveOwner || 0).toLocaleString('id-ID'), paperWidth);
+    esc += CMD.BOLD_ON;
+    esc += formatTwoColumns('MODAL ESOK (LACI)', 'Rp ' + (cb.modalEsok || 0).toLocaleString('id-ID'), paperWidth);
+    esc += CMD.BOLD_OFF;
+
+    if (cb.denominations) {
+      const denomKeys = [100000, 50000, 20000, 10000, 5000, 2000, 1000].filter(d => (cb.denominations[d] || 0) > 0);
+      if (denomKeys.length > 0) {
+        esc += formatDivider('-', paperWidth);
+        esc += 'PECAHAN FISIK LACI:\n';
+        denomKeys.forEach(d => {
+          const q = cb.denominations[d];
+          const lbl = (d === 2000 || d === 1000) ? '2rb/1rb' : (d / 1000) + 'rb';
+          esc += formatTwoColumns(`  ${lbl} x ${q}`, (d * q).toLocaleString('id-ID'), paperWidth);
+        });
+      }
+    }
+
+    esc += CMD.ALIGN_CENTER;
+    esc += formatDivider('=', paperWidth);
+    esc += 'Rekap Buku Kas Laci 1966 Caffe\n\n';
+    esc += CMD.FEED_3;
+    esc += CMD.CUT;
+  } else {
+    // 2. Transaction Metadata (Left-aligned)
+    esc += CMD.ALIGN_LEFT;
+    esc += `No   : ${trx.id}\n`;
+    esc += `Waktu: ${trx.date} ${trx.time}\n`;
+    esc += `Kasir: ${trx.cashierName || 'Kasir 1966'}\n`;
+    esc += `Tipe : ${trx.type} (${trx.ref || '-'})\n`;
+    esc += formatDivider('-', paperWidth);
+
+    // 3. Items List
+    if (trx.items && trx.items.length > 0) {
+      trx.items.forEach(item => {
+        const itemTitle = `${item.name}${item.notes ? ' (' + item.notes + ')' : ''}`;
+        const itemPriceStr = (item.price * item.qty).toLocaleString('id-ID');
+        esc += `${itemTitle}\n`;
+        esc += formatTwoColumns(`  ${item.qty} x ${item.price.toLocaleString('id-ID')}`, itemPriceStr, paperWidth);
+      });
+    }
+    esc += formatDivider('-', paperWidth);
+
+    // 4. Totals & Payment Summary
+    esc += formatTwoColumns('Subtotal', (trx.subtotal || 0).toLocaleString('id-ID'), paperWidth);
+    if (trx.discount && trx.discount > 0) {
+      esc += formatTwoColumns('Diskon', '-' + trx.discount.toLocaleString('id-ID'), paperWidth);
+    }
+    if (trx.tax && trx.tax > 0) {
+      esc += formatTwoColumns('Pajak PB1 (11%)', trx.tax.toLocaleString('id-ID'), paperWidth);
+    }
+    esc += formatDivider('-', paperWidth);
+
+    esc += CMD.BOLD_ON;
+    esc += formatTwoColumns('TOTAL', 'Rp ' + (trx.total || 0).toLocaleString('id-ID'), paperWidth);
+    esc += CMD.BOLD_OFF;
+
+    esc += formatTwoColumns(trx.method || 'TUNAI', (trx.paid || trx.total || 0).toLocaleString('id-ID'), paperWidth);
+    if (trx.method === 'TUNAI' && trx.change !== undefined) {
+      esc += formatTwoColumns('Kembalian', (trx.change || 0).toLocaleString('id-ID'), paperWidth);
+    }
+
+    // 5. Footer & Paper Feed
+    esc += CMD.ALIGN_CENTER;
+    esc += formatDivider('=', paperWidth);
+    esc += 'Terima Kasih Atas Kunjungan Anda\n';
+    esc += '1966 Caffe • Have a Great Day!\n\n';
+    esc += CMD.FEED_3;
+    esc += CMD.CUT;
   }
-  esc += formatDivider('-', paperWidth);
-
-  // 4. Totals & Payment Summary
-  esc += formatTwoColumns('Subtotal', (trx.subtotal || 0).toLocaleString('id-ID'), paperWidth);
-  if (trx.discount && trx.discount > 0) {
-    esc += formatTwoColumns('Diskon', '-' + trx.discount.toLocaleString('id-ID'), paperWidth);
-  }
-  if (trx.tax && trx.tax > 0) {
-    esc += formatTwoColumns('Pajak PB1 (11%)', trx.tax.toLocaleString('id-ID'), paperWidth);
-  }
-  esc += formatDivider('-', paperWidth);
-
-  esc += CMD.BOLD_ON;
-  esc += formatTwoColumns('TOTAL', 'Rp ' + (trx.total || 0).toLocaleString('id-ID'), paperWidth);
-  esc += CMD.BOLD_OFF;
-
-  esc += formatTwoColumns(trx.method || 'TUNAI', (trx.paid || trx.total || 0).toLocaleString('id-ID'), paperWidth);
-  if (trx.method === 'TUNAI' && trx.change !== undefined) {
-    esc += formatTwoColumns('Kembalian', (trx.change || 0).toLocaleString('id-ID'), paperWidth);
-  }
-
-  // 5. Footer & Paper Feed
-  esc += CMD.ALIGN_CENTER;
-  esc += formatDivider('=', paperWidth);
-  esc += 'Terima Kasih Atas Kunjungan Anda\n';
-  esc += '1966 Caffe • Have a Great Day!\n\n';
-  esc += CMD.FEED_3;
-  esc += CMD.CUT;
 
   // Convert string to Uint8Array (CP437 / ISO-8859-1 compatible)
   const uint8 = new Uint8Array(esc.length);

@@ -45,6 +45,7 @@ const STORAGE_KEYS = {
   HISTORY: 'caffe1966_pos_history_v1',
   PRODUCTS: 'caffe1966_pos_products_v1',
   EXPENSES: 'caffe1966_pos_expenses_v1',
+  CASHBOOK: 'caffe1966_pos_cashbook_v1',
   TAXES: 'caffe1966_pos_taxes_v1',
   USERS: 'caffe1966_pos_users_v1',
   SESSION: 'caffe1966_pos_session_v1',
@@ -59,6 +60,7 @@ try {
     localStorage.removeItem('caffe1966_pos_expenses_trial');
     localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.CASHBOOK, JSON.stringify({}));
     localStorage.setItem(STORAGE_KEYS.CLEAN_INITIAL, 'true');
   }
 } catch (e) {}
@@ -222,9 +224,14 @@ const defaultAttendance = [
 ];
 
 // Persistent State Instances
+const defaultCashbook = {};
 let products = loadStorage(STORAGE_KEYS.PRODUCTS, defaultProducts);
 let history = loadStorage(STORAGE_KEYS.HISTORY, defaultHistory);
 let expenses = loadStorage(STORAGE_KEYS.EXPENSES, defaultExpenses).map(normalizeExpense);
+let cashbook = loadStorage(STORAGE_KEYS.CASHBOOK, defaultCashbook);
+if (!cashbook || typeof cashbook !== 'object' || Array.isArray(cashbook)) {
+  cashbook = {};
+}
 let taxes = loadStorage(STORAGE_KEYS.TAXES, defaultTaxes);
 let users = loadStorage(STORAGE_KEYS.USERS, defaultUsers);
 let attendance = loadStorage(STORAGE_KEYS.ATTENDANCE, defaultAttendance);
@@ -266,6 +273,7 @@ function cancelKioskAutoReturn() {
 
 let currentExpenseFilter = 'ALL'; // ALL, KASIR, PENDING, SETTLED
 let editingExpenseId = null;
+let activeCashbookDate = new Date().toISOString().split('T')[0];
 
 // Storage helper functions (Full Offline Local Storage)
 function saveHistory() { 
@@ -278,6 +286,10 @@ function saveProducts() {
 
 function saveExpenses() { 
   saveStorage(STORAGE_KEYS.EXPENSES, expenses); 
+}
+
+function saveCashbook() {
+  saveStorage(STORAGE_KEYS.CASHBOOK, cashbook);
 }
 
 function saveTaxes() { saveStorage(STORAGE_KEYS.TAXES, taxes); }
@@ -880,6 +892,7 @@ document.getElementById('btn-confirm-payment').addEventListener('click', () => {
   
   updateDashboardStats();
   renderHistory();
+  renderExpense();
   renderReports();
   
   document.getElementById('modal-payment').classList.remove('show');
@@ -982,23 +995,39 @@ window.openReceiptModal = function(param) {
     table.appendChild(tr);
   });
 
-  document.getElementById('receipt-subtotal').textContent = formatRp(trx.subtotal);
+  const subEl = document.getElementById('receipt-subtotal');
+  if (subEl) {
+    subEl.textContent = formatRp(trx.subtotal);
+    if (subEl.previousElementSibling) subEl.previousElementSibling.textContent = 'Subtotal';
+  }
+  const discRow = document.getElementById('receipt-discount-row');
+  if (discRow && discRow.cells[0]) discRow.cells[0].textContent = 'Diskon';
   if (trx.discount > 0) {
-    document.getElementById('receipt-discount-row').style.display = 'table-row';
+    if (discRow) discRow.style.display = 'table-row';
     document.getElementById('receipt-discount').textContent = '-' + formatRp(trx.discount);
   } else {
-    document.getElementById('receipt-discount-row').style.display = 'none';
+    if (discRow) discRow.style.display = 'none';
   }
-  document.getElementById('receipt-tax').textContent = formatRp(trx.tax);
-  document.getElementById('receipt-total').textContent = formatRp(trx.total);
+  const taxEl = document.getElementById('receipt-tax');
+  if (taxEl) {
+    taxEl.textContent = formatRp(trx.tax);
+    if (taxEl.parentElement) taxEl.parentElement.style.display = 'table-row';
+  }
+  const totEl = document.getElementById('receipt-total');
+  if (totEl) {
+    totEl.textContent = formatRp(trx.total);
+    if (totEl.previousElementSibling) totEl.previousElementSibling.textContent = 'TOTAL';
+  }
   document.getElementById('receipt-method-label').textContent = trx.method;
   document.getElementById('receipt-paid').textContent = formatRp(trx.paid);
   
+  const chgRow = document.getElementById('receipt-change-row');
+  if (chgRow && chgRow.cells[0]) chgRow.cells[0].textContent = 'Kembalian';
   if (trx.method === 'TUNAI') {
-    document.getElementById('receipt-change-row').style.display = 'table-row';
+    if (chgRow) chgRow.style.display = 'table-row';
     document.getElementById('receipt-change').textContent = formatRp(trx.change);
   } else {
-    document.getElementById('receipt-change-row').style.display = 'none';
+    if (chgRow) chgRow.style.display = 'none';
   }
 
   document.getElementById('modal-receipt').classList.add('show');
@@ -1398,6 +1427,7 @@ document.getElementById('btn-save-edit-trx').addEventListener('click', () => {
   saveHistory();
   document.getElementById('modal-edit-trx').classList.remove('show');
   renderHistory();
+  renderExpense();
   updateDashboardStats();
   renderReports();
 
@@ -1416,6 +1446,7 @@ document.getElementById('btn-delete-trx').addEventListener('click', () => {
   saveHistory();
   document.getElementById('modal-edit-trx').classList.remove('show');
   renderHistory();
+  renderExpense();
   updateDashboardStats();
   renderReports();
 
@@ -1424,7 +1455,7 @@ document.getElementById('btn-delete-trx').addEventListener('click', () => {
 });
 
 // --------------------------------------------------
-// Biaya Operasional & Talangan Karyawan Logic
+// Buku Kas Laci Harian & Biaya Operasional Logic
 // --------------------------------------------------
 function formatDateIndo(isoStr) {
   if (!isoStr) return '';
@@ -1446,13 +1477,1034 @@ function formatDateIndo(isoStr) {
   return isoStr;
 }
 
+function formatSignedRp(num) {
+  const n = Number(num) || 0;
+  if (n < 0) return `-Rp ${Math.abs(n).toLocaleString('id-ID')}`;
+  if (n > 0) return `+Rp ${n.toLocaleString('id-ID')}`;
+  return 'Rp 0';
+}
+
+function getTrxIsoDate(trx) {
+  if (trx.isoDate) return trx.isoDate;
+  if (trx.date) {
+    const parts = trx.date.split('/');
+    if (parts.length === 3) {
+      const dd = String(parts[0]).padStart(2, '0');
+      const mm = String(parts[1]).padStart(2, '0');
+      const yyyy = parts[2];
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  }
+  return '';
+}
+
+function getPosOmsetForDate(isoDate) {
+  let posPendapatan = 0;
+  let posOnline = 0;
+  let trxCount = 0;
+  let onlineCount = 0;
+
+  history.forEach(trx => {
+    if (getTrxIsoDate(trx) === isoDate) {
+      const amt = Number(trx.total) || 0;
+      posPendapatan += amt;
+      trxCount++;
+      if (trx.method && trx.method !== 'TUNAI') {
+        posOnline += amt;
+        onlineCount++;
+      }
+    }
+  });
+
+  return { posPendapatan, posOnline, trxCount, onlineCount };
+}
+
+function getCarryOverModalForDate(isoDate) {
+  if (!isoDate || !cashbook) return null;
+  const prevDates = Object.keys(cashbook)
+    .filter(d => d < isoDate && cashbook[d] && cashbook[d].modalEsok !== undefined && cashbook[d].modalEsok !== null)
+    .sort((a, b) => b.localeCompare(a));
+
+  if (prevDates.length > 0) {
+    const latestPrev = prevDates[0];
+    return {
+      amount: Math.max(0, Number(cashbook[latestPrev].modalEsok) || 0),
+      sourceDate: latestPrev
+    };
+  }
+  return null;
+}
+
+const CASHBOOK_DENOM_LIST = [100000, 50000, 20000, 10000, 5000, 2000];
+
+function computeAutoDenominations(targetAmount) {
+  let rem = Math.max(0, Math.floor((Number(targetAmount) || 0) / 1000) * 1000);
+  const result = { 100000: 0, 50000: 0, 20000: 0, 10000: 0, 5000: 0, 2000: 0 };
+  for (const d of CASHBOOK_DENOM_LIST) {
+    if (rem >= d) {
+      result[d] = Math.floor(rem / d);
+      rem = rem % d;
+    }
+  }
+  return result;
+}
+
+function ensureCashbookEntry(isoDate) {
+  if (!cashbook[isoDate]) {
+    cashbook[isoDate] = {
+      isoDate,
+      modalAwal: null,
+      manualPendapatan: null,
+      manualOnline: null,
+      saveAmount: null,
+      modalEsok: null,
+      lastEditedAlloc: null,
+      denominations: null,
+      denomTouched: false,
+      isSaved: false,
+      updatedAt: Date.now()
+    };
+  }
+  return cashbook[isoDate];
+}
+
+function getCashbookCalculation(isoDate) {
+  const entry = cashbook[isoDate] || {};
+  const carryOver = getCarryOverModalForDate(isoDate);
+
+  const isModalManual = entry.modalAwal !== undefined && entry.modalAwal !== null;
+  const modalAwal = isModalManual ? Math.max(0, Number(entry.modalAwal) || 0) : (carryOver ? carryOver.amount : 0);
+
+  const dayExpenses = expenses.filter(e => e.isoDate === isoDate);
+  const shoppingItems = dayExpenses
+    .filter(e => e.fundSource === 'KASIR' || e.reimbursementStatus === 'SETTLED')
+    .slice()
+    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+  const pendingReimbItems = dayExpenses.filter(e => e.fundSource === 'KARYAWAN' && e.reimbursementStatus === 'PENDING');
+
+  const belanjaHarian = shoppingItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const pendingReimbTotal = pendingReimbItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+  // Rumus 1: Sisa Modal = Modal Awal - Belanja Harian (bisa positif atau negatif)
+  const sisaModal = modalAwal - belanjaHarian;
+
+  const { posPendapatan, posOnline, trxCount, onlineCount } = getPosOmsetForDate(isoDate);
+  const isPendapatanManual = entry.manualPendapatan !== undefined && entry.manualPendapatan !== null;
+  const isOnlineManual = entry.manualOnline !== undefined && entry.manualOnline !== null;
+
+  const pendapatan = isPendapatanManual ? Math.max(0, Number(entry.manualPendapatan) || 0) : posPendapatan;
+  const online = isOnlineManual ? Math.max(0, Number(entry.manualOnline) || 0) : posOnline;
+  const omsetTunai = pendapatan - online;
+
+  // Rumus 2: Total Tunai Laci = Pendapatan (+ / -) Sisa Modal - Online
+  const totalTunai = pendapatan + sisaModal - online;
+
+  let saveAmount = 0;
+  let modalEsok = Math.max(0, totalTunai);
+
+  if (entry.lastEditedAlloc === 'MODAL_ESOK' && entry.modalEsok !== undefined && entry.modalEsok !== null) {
+    modalEsok = Math.max(0, Number(entry.modalEsok) || 0);
+    saveAmount = Math.max(0, totalTunai - modalEsok);
+  } else if (entry.saveAmount !== undefined && entry.saveAmount !== null) {
+    saveAmount = Math.max(0, Number(entry.saveAmount) || 0);
+    modalEsok = Math.max(0, totalTunai - saveAmount);
+  } else if (entry.modalEsok !== undefined && entry.modalEsok !== null) {
+    modalEsok = Math.max(0, Number(entry.modalEsok) || 0);
+    saveAmount = Math.max(0, totalTunai - modalEsok);
+  }
+
+  // Keep modalEsok & saveAmount synced if entry already exists so next day carry-over stays accurate
+  if (cashbook[isoDate]) {
+    cashbook[isoDate].saveAmount = saveAmount;
+    cashbook[isoDate].modalEsok = modalEsok;
+  }
+
+  const denoms = (entry.denomTouched && entry.denominations)
+    ? entry.denominations
+    : computeAutoDenominations(Math.max(0, totalTunai));
+
+  const denomTotal = CASHBOOK_DENOM_LIST.reduce((acc, d) => acc + d * (Number(denoms[d]) || 0), 0);
+  const denomDiff = denomTotal - Math.max(0, totalTunai);
+
+  return {
+    isoDate,
+    friendlyDate: formatDateIndo(isoDate),
+    modalAwal,
+    isModalManual,
+    carryOver,
+    shoppingItems,
+    belanjaHarian,
+    pendingReimbItems,
+    pendingReimbTotal,
+    sisaModal,
+    pendapatan,
+    online,
+    omsetTunai,
+    isPendapatanManual,
+    isOnlineManual,
+    posPendapatan,
+    posOnline,
+    trxCount,
+    onlineCount,
+    totalTunai,
+    saveAmount,
+    modalEsok,
+    denoms,
+    denomTotal,
+    denomDiff,
+    isOverAllocated: (saveAmount + modalEsok) > Math.max(0, totalTunai) && totalTunai >= 0,
+    isSaved: !!entry.isSaved
+  };
+}
+
+// Self-check function for notebook reconciliation math
+window.verifyCashbookMath = function() {
+  // Page 1: Modal 84.000, Belanja 210.000 -> Sisa -126.000; Pendapatan 2.176.000, Online 1.270.000 -> Tunai 780.000; Save 700.000 -> Modal Esok 80.000
+  const sisa1 = 84000 - 210000;
+  const tunai1 = 2176000 + sisa1 - 1270000;
+  const esok1 = tunai1 - 700000;
+  // Page 2: Modal 80.000, Belanja 25.000 -> Sisa +55.000; Pendapatan 1.495.000, Online 300.000 -> Tunai 1.250.000; Save 1.200.000 -> Modal Esok 50.000
+  const sisa2 = esok1 - 25000;
+  const tunai2 = 1495000 + sisa2 - 300000;
+  const esok2 = tunai2 - 1200000;
+  const pass = sisa1 === -126000 && tunai1 === 780000 && esok1 === 80000 && sisa2 === 55000 && tunai2 === 1250000 && esok2 === 50000;
+  if (!pass) console.error('Cashbook math verification failed!', { sisa1, tunai1, esok1, sisa2, tunai2, esok2 });
+  return { pass, page1: { sisa1, tunai1, esok1 }, page2: { sisa2, tunai2, esok2 } };
+};
+window.verifyCashbookMath();
+
+let currentExpenseMode = 'CASHBOOK'; // CASHBOOK | HISTORY
+let activeQuickFundSource = 'KASIR';
+
+window.switchExpenseMode = function(mode) {
+  currentExpenseMode = mode === 'HISTORY' ? 'HISTORY' : 'CASHBOOK';
+  const viewCashbook = document.getElementById('expense-view-cashbook');
+  const viewHistory = document.getElementById('expense-view-history');
+  const tabCashbook = document.getElementById('tab-mode-cashbook');
+  const tabHistory = document.getElementById('tab-mode-history');
+  const switchLabel = document.getElementById('label-switch-history');
+
+  if (viewCashbook) viewCashbook.style.display = currentExpenseMode === 'CASHBOOK' ? 'block' : 'none';
+  if (viewHistory) viewHistory.style.display = currentExpenseMode === 'HISTORY' ? 'block' : 'none';
+
+  if (tabCashbook) {
+    tabCashbook.classList.toggle('active', currentExpenseMode === 'CASHBOOK');
+    tabCashbook.setAttribute('aria-selected', currentExpenseMode === 'CASHBOOK' ? 'true' : 'false');
+  }
+  if (tabHistory) {
+    tabHistory.classList.toggle('active', currentExpenseMode === 'HISTORY');
+    tabHistory.setAttribute('aria-selected', currentExpenseMode === 'HISTORY' ? 'true' : 'false');
+  }
+  if (switchLabel) {
+    switchLabel.textContent = currentExpenseMode === 'HISTORY' ? 'Buku Kas Laci' : 'Riwayat Bulanan';
+  }
+  lucide.createIcons();
+};
+
+window.toggleExpenseHistoryView = function() {
+  switchExpenseMode(currentExpenseMode === 'CASHBOOK' ? 'HISTORY' : 'CASHBOOK');
+};
+
+window.toggleModalAwalEdit = function(forceState) {
+  const drawer = document.getElementById('cashbook-modal-edit-drawer');
+  if (!drawer) return;
+  const isOpen = drawer.style.display !== 'none';
+  const nextState = typeof forceState === 'boolean' ? forceState : !isOpen;
+  drawer.style.display = nextState ? 'flex' : 'none';
+  if (nextState) {
+    const input = document.getElementById('cashbook-input-modal');
+    if (input) input.focus();
+  }
+};
+
+window.toggleOmsetManualEdit = function(forceState) {
+  const drawer = document.getElementById('cashbook-omset-edit-drawer');
+  if (!drawer) return;
+  const isOpen = drawer.style.display !== 'none';
+  const nextState = typeof forceState === 'boolean' ? forceState : !isOpen;
+  drawer.style.display = nextState ? 'flex' : 'none';
+  if (nextState) {
+    const input = document.getElementById('cashbook-input-pendapatan');
+    if (input) input.focus();
+  }
+};
+
+window.selectCashbookDivisi = function(divisi) {
+  const catSelect = document.getElementById('cashbook-quick-cat');
+  if (catSelect) catSelect.value = divisi;
+  document.querySelectorAll('.cb-divisi-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-divisi') === divisi);
+  });
+};
+
+window.selectCashbookFundSource = function(source) {
+  activeQuickFundSource = source === 'KARYAWAN' ? 'KARYAWAN' : 'KASIR';
+  const optKasir = document.getElementById('cb-source-opt-kasir');
+  const optKaryawan = document.getElementById('cb-source-opt-karyawan');
+  const empWrap = document.getElementById('cb-quick-employee-wrap');
+  const hintText = document.getElementById('cb-fund-hint-text');
+  const submitBtn = document.getElementById('btn-cashbook-quick-add');
+
+  if (optKasir) {
+    optKasir.classList.toggle('active', activeQuickFundSource === 'KASIR');
+    const r = optKasir.querySelector('input[type="radio"]');
+    if (r) r.checked = activeQuickFundSource === 'KASIR';
+  }
+  if (optKaryawan) {
+    optKaryawan.classList.toggle('active', activeQuickFundSource === 'KARYAWAN');
+    const r = optKaryawan.querySelector('input[type="radio"]');
+    if (r) r.checked = activeQuickFundSource === 'KARYAWAN';
+  }
+  if (empWrap) {
+    empWrap.style.display = activeQuickFundSource === 'KARYAWAN' ? 'flex' : 'none';
+  }
+  if (hintText) {
+    hintText.textContent = activeQuickFundSource === 'KARYAWAN'
+      ? 'Dicatat sebagai talangan (belum potong laci)'
+      : 'Langsung potong saldo kasir';
+  }
+  if (submitBtn) {
+    submitBtn.innerHTML = activeQuickFundSource === 'KARYAWAN'
+      ? '<i data-lucide="plus" style="width:16px;height:16px;"></i> Simpan Talangan Karyawan'
+      : '<i data-lucide="plus" style="width:16px;height:16px;"></i> Simpan Pengeluaran Laci';
+    lucide.createIcons();
+  }
+};
+
+window.updateCashbookDenom = function(denom, delta, exactVal = null) {
+  const entry = ensureCashbookEntry(activeCashbookDate);
+  const cb = getCashbookCalculation(activeCashbookDate);
+  if (!entry.denominations || !entry.denomTouched) {
+    entry.denominations = { ...cb.denoms };
+  }
+  entry.denomTouched = true;
+  const currentQty = Number(entry.denominations[denom]) || 0;
+  const nextQty = exactVal !== null ? Math.max(0, parseInt(exactVal, 10) || 0) : Math.max(0, currentQty + delta);
+  entry.denominations[denom] = nextQty;
+  entry.updatedAt = Date.now();
+  saveCashbook();
+  renderCashbookSheet(activeCashbookDate);
+};
+
+window.autoMatchCashbookDenominations = function() {
+  const entry = ensureCashbookEntry(activeCashbookDate);
+  const cb = getCashbookCalculation(activeCashbookDate);
+  entry.denominations = computeAutoDenominations(Math.max(0, cb.totalTunai));
+  entry.denomTouched = false;
+  entry.updatedAt = Date.now();
+  saveCashbook();
+  renderCashbookSheet(activeCashbookDate);
+  showToast('Pecahan uang fisik disesuaikan dengan target saldo laci', 'info');
+};
+
+window.setQuickModalAwal = function(amount) {
+  const entry = ensureCashbookEntry(activeCashbookDate);
+  entry.modalAwal = Math.max(0, Number(amount) || 0);
+  entry.updatedAt = Date.now();
+  saveCashbook();
+  renderExpense();
+  showToast(`Modal Awal Laci diatur ke ${formatRp(entry.modalAwal)}`, 'info');
+};
+
+window.applyQuickSplit = function(saveVal, modalEsokVal) {
+  const entry = ensureCashbookEntry(activeCashbookDate);
+  entry.saveAmount = Math.max(0, Number(saveVal) || 0);
+  entry.modalEsok = Math.max(0, Number(modalEsokVal) || 0);
+  entry.lastEditedAlloc = 'SAVE';
+  entry.updatedAt = Date.now();
+  saveCashbook();
+  renderExpense();
+  showToast(`Dibagi: Setor ${formatRp(entry.saveAmount)} & Modal Besok ${formatRp(entry.modalEsok)}`, 'success');
+};
+
+function renderCashbookSheet(isoDate = activeCashbookDate) {
+  const sheetEl = document.getElementById('cashbook-sheet');
+  if (!sheetEl) return;
+
+  activeCashbookDate = isoDate || new Date().toISOString().split('T')[0];
+  const nowIso = new Date().toISOString().split('T')[0];
+  const cb = getCashbookCalculation(activeCashbookDate);
+  const cashierName = currentUser ? currentUser.name : 'Kasir 1966';
+
+  // Topbar Date & Status
+  const dateInput = document.getElementById('cashbook-active-date');
+  if (dateInput && document.activeElement !== dateInput) {
+    dateInput.value = activeCashbookDate;
+  }
+
+  const friendlyEl = document.getElementById('cashbook-date-friendly');
+  if (friendlyEl) {
+    friendlyEl.textContent = (activeCashbookDate === nowIso ? `HARI INI, ${cb.friendlyDate}` : cb.friendlyDate).toUpperCase();
+  }
+
+  const statusPill = document.getElementById('cashbook-status-pill');
+  const shiftLabel = document.getElementById('cashbook-shift-label');
+  if (statusPill) {
+    if (cb.isSaved) {
+      statusPill.className = 'cb-shift-status-pill saved';
+      if (shiftLabel) shiftLabel.textContent = `Shift Ditutup - Rekap Tersimpan (${cashierName})`;
+      else statusPill.textContent = 'Rekap Tersimpan';
+    } else {
+      statusPill.className = 'cb-shift-status-pill';
+      if (shiftLabel) {
+        shiftLabel.textContent = activeCashbookDate === nowIso
+          ? `Shift 1 - Laci Terbuka (${cashierName})`
+          : `Draft Rekap Laci (${cb.friendlyDate})`;
+      } else {
+        statusPill.textContent = activeCashbookDate === nowIso ? 'Shift Aktif' : 'Draft Rekap';
+      }
+    }
+  }
+
+  // Modal Awal Field, Formatted Preview & Origin Info
+  const modalInput = document.getElementById('cashbook-input-modal');
+  if (modalInput && document.activeElement !== modalInput) {
+    modalInput.value = cb.modalAwal > 0 || cb.isModalManual ? cb.modalAwal : '';
+  }
+
+  const previewModalEl = document.getElementById('cashbook-preview-modal');
+  if (previewModalEl) previewModalEl.textContent = formatRp(cb.modalAwal);
+
+  const summaryModalEl = document.getElementById('cashbook-summary-modal-awal');
+  if (summaryModalEl) summaryModalEl.textContent = formatRp(cb.modalAwal);
+
+  const modalOriginEl = document.getElementById('cashbook-modal-origin');
+  const btnResetModal = document.getElementById('btn-reset-modal-origin');
+  if (modalOriginEl) {
+    if (cb.isModalManual && cb.carryOver) {
+      modalOriginEl.textContent = `(Koreksi manual • Sisa kemarin: ${formatRp(cb.carryOver.amount)})`;
+      if (btnResetModal) btnResetModal.style.display = 'inline-block';
+    } else if (cb.isModalManual) {
+      modalOriginEl.textContent = '(Kas modal pagi ditetapkan kasir)';
+      if (btnResetModal) btnResetModal.style.display = 'none';
+    } else if (cb.carryOver) {
+      modalOriginEl.innerHTML = `(Estafet otomatis dari laci ${formatDateIndo(cb.carryOver.sourceDate)})`;
+      if (btnResetModal) btnResetModal.style.display = 'none';
+    } else {
+      modalOriginEl.textContent = '(Klik Koreksi untuk mengatur modal pagi)';
+      if (btnResetModal) btnResetModal.style.display = 'none';
+    }
+  }
+
+  // Shopping Items List (Belanja Harian Kas Laci)
+  const countEl = document.getElementById('cashbook-shopping-count');
+  if (countEl) countEl.textContent = `${cb.shoppingItems.length} Transaksi`;
+
+  const listEl = document.getElementById('cashbook-shopping-list');
+  if (listEl) {
+    if (cb.shoppingItems.length === 0) {
+      listEl.innerHTML = `
+        <li style="padding:14px 12px; text-align:center; color:var(--text-muted); font-size:12px; background:#FFFFFF; border:1px dashed var(--border-color); border-radius:var(--radius-sm);">
+          Belum ada pengeluaran dari laci pada tanggal ini. Isi form di atas lalu klik <strong>+ Simpan Pengeluaran Laci</strong>.
+        </li>
+      `;
+    } else {
+      listEl.innerHTML = cb.shoppingItems.map(item => {
+        const catRaw = (item.category || 'KAFE').toUpperCase();
+        const divClass = (catRaw === 'CUCI' || catRaw === 'MAKANAN') ? 'cuci' : ((catRaw === 'UMUM' || catRaw === 'OPERASIONAL') ? 'umum' : 'kafe');
+        const divLabel = (catRaw === 'CUCI' || catRaw === 'MAKANAN') ? 'DAPUR / RESTO' : ((catRaw === 'UMUM' || catRaw === 'OPERASIONAL') ? 'OPERASIONAL' : 'KAFE (F&B)');
+        let timeStr = 'Hari ini';
+        if (item.timestamp) {
+          const d = new Date(item.timestamp);
+          timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} WIB`;
+        }
+        const sourceLabel = item.fundSource === 'KARYAWAN'
+          ? `Lunas Reimburse (${item.employeeName || 'Staf'})`
+          : 'Kas Laci (Tunai)';
+
+        return `
+          <li class="cb-expense-item-card">
+            <div class="cb-item-left">
+              <div class="cb-item-top-row">
+                <span class="cb-item-div-badge ${divClass}">${divLabel}</span>
+                <span class="cb-item-title" title="${item.desc}">${item.desc}</span>
+              </div>
+              <span class="cb-item-meta">${timeStr} • Oleh: ${cashierName} • ${sourceLabel}</span>
+            </div>
+            <div class="cb-item-right">
+              <span class="cb-item-amount">-${formatRp(item.amount)}</span>
+              <button type="button" class="btn-cashbook-item-del" onclick="openEditExpense('${item.id}')" title="Ubah item belanja" aria-label="Ubah ${item.desc}">
+                <i data-lucide="edit-3" style="width:13px;height:13px;"></i>
+              </button>
+              <button type="button" class="btn-cashbook-item-del" onclick="deleteExpense('${item.id}')" title="Hapus item belanja" aria-label="Hapus ${item.desc}">
+                <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+              </button>
+            </div>
+          </li>
+        `;
+      }).join('');
+    }
+  }
+
+  const valBelanjaEl = document.getElementById('cashbook-val-belanja');
+  if (valBelanjaEl) {
+    valBelanjaEl.textContent = cb.belanjaHarian > 0 ? `-Rp ${cb.belanjaHarian.toLocaleString('id-ID')}` : 'Rp 0';
+  }
+
+  // Pending Employee Reimbursement Notice on this Date
+  const reimbNoticeEl = document.getElementById('cashbook-pending-reimb-notice');
+  if (reimbNoticeEl) {
+    if (cb.pendingReimbItems.length > 0) {
+      reimbNoticeEl.style.display = 'flex';
+      reimbNoticeEl.innerHTML = `
+        <div>
+          <strong>${cb.pendingReimbItems.length} Talangan Karyawan (${formatRp(cb.pendingReimbTotal)})</strong> belum diganti dari laci.
+        </div>
+        <button type="button" class="btn-reimb-action" onclick="confirmReimbursement('${cb.pendingReimbItems[0].id}')">
+          <i data-lucide="check-circle" style="width:12px;height:12px;"></i> Lunasi dari Laci
+        </button>
+      `;
+    } else {
+      reimbNoticeEl.style.display = 'none';
+      reimbNoticeEl.innerHTML = '';
+    }
+  }
+
+  // Sisa Modal Box (+ / -) in Column A Footer & Column B Bridge
+  const sisaBoxEl = document.getElementById('cashbook-sisa-box');
+  const sisaBadgeEl = document.getElementById('cashbook-sisa-badge');
+  const valSisaEl = document.getElementById('cashbook-val-sisa');
+  const subSisaEl = document.getElementById('cashbook-sisa-sub');
+  const formulaSisaEl = document.getElementById('cashbook-formula-sisa');
+  const formulaSisaDescEl = document.getElementById('cashbook-formula-sisa-desc');
+
+  if (valSisaEl) valSisaEl.textContent = formatSignedRp(cb.sisaModal);
+  if (formulaSisaEl) {
+    formulaSisaEl.textContent = formatSignedRp(cb.sisaModal);
+    formulaSisaEl.style.color = cb.sisaModal < 0 ? '#9F1239' : (cb.sisaModal > 0 ? '#065F46' : 'var(--text-main)');
+  }
+
+  if (sisaBoxEl) {
+    if (cb.sisaModal < 0) {
+      sisaBoxEl.className = 'cb-footer-sisa-bar minus';
+      if (sisaBadgeEl) sisaBadgeEl.textContent = 'KURANG MODAL (PAKAI OMSET)';
+      if (subSisaEl) subSisaEl.textContent = `Minus: Belanja melebihi modal awal, memakai ${formatRp(Math.abs(cb.sisaModal))} dari omset tunai`;
+      if (formulaSisaDescEl) formulaSisaDescEl.textContent = `Dikurangi karena belanja memakai uang hasil jualan (${formatRp(Math.abs(cb.sisaModal))})`;
+    } else if (cb.sisaModal > 0) {
+      sisaBoxEl.className = 'cb-footer-sisa-bar plus';
+      if (sisaBadgeEl) sisaBadgeEl.textContent = 'MASIH SISA MODAL';
+      if (subSisaEl) subSisaEl.textContent = `Plus: Masih tersisa uang modal ${formatRp(cb.sisaModal)} di dalam laci`;
+      if (formulaSisaDescEl) formulaSisaDescEl.textContent = `Ditambahkan karena uang modal pagi masih sisa di laci (${formatRp(cb.sisaModal)})`;
+    } else {
+      sisaBoxEl.className = 'cb-footer-sisa-bar';
+      if (sisaBadgeEl) sisaBadgeEl.textContent = 'MODAL PAS HABIS (Rp 0)';
+      if (subSisaEl) subSisaEl.textContent = 'Modal Awal dikurangi Total Belanja Harian hasilnya Rp 0';
+      if (formulaSisaDescEl) formulaSisaDescEl.textContent = 'Modal awal dikurangi belanja laci hasilnya Rp 0';
+    }
+  }
+
+  // Column B: Ringkasan Saldo Sistem
+  const valOmsetTunaiEl = document.getElementById('cashbook-val-omset-tunai');
+  if (valOmsetTunaiEl) {
+    valOmsetTunaiEl.textContent = cb.omsetTunai >= 0 ? formatRp(cb.omsetTunai) : formatSignedRp(cb.omsetTunai);
+  }
+
+  const ledgerBelanjaEl = document.getElementById('cashbook-ledger-belanja');
+  if (ledgerBelanjaEl) {
+    ledgerBelanjaEl.textContent = `(${formatRp(cb.belanjaHarian)})`;
+  }
+
+  // Pendapatan & Online Inputs + Formatted Readouts
+  const pendapatanInput = document.getElementById('cashbook-input-pendapatan');
+  if (pendapatanInput && document.activeElement !== pendapatanInput) {
+    pendapatanInput.value = cb.pendapatan > 0 || cb.isPendapatanManual ? cb.pendapatan : '';
+  }
+
+  const onlineInput = document.getElementById('cashbook-input-online');
+  if (onlineInput && document.activeElement !== onlineInput) {
+    onlineInput.value = cb.online > 0 || cb.isOnlineManual ? cb.online : '';
+  }
+
+  const badgePendEl = document.getElementById('cashbook-badge-pendapatan');
+  if (badgePendEl) {
+    badgePendEl.textContent = cb.isPendapatanManual ? 'Manual' : 'POS';
+    badgePendEl.className = 'source-mini-badge' + (cb.isPendapatanManual ? ' manual' : '');
+  }
+
+  const badgeOnlineEl = document.getElementById('cashbook-badge-online');
+  if (badgeOnlineEl) {
+    badgeOnlineEl.textContent = cb.isOnlineManual ? 'Manual' : 'POS';
+    badgeOnlineEl.className = 'source-mini-badge' + (cb.isOnlineManual ? ' manual' : '');
+  }
+
+  const readoutPendEl = document.getElementById('cashbook-readout-pendapatan');
+  if (readoutPendEl) readoutPendEl.textContent = formatRp(cb.pendapatan);
+
+  const readoutOnlineEl = document.getElementById('cashbook-readout-online');
+  if (readoutOnlineEl) readoutOnlineEl.textContent = `${formatRp(cb.online)} (Langsung ke Bank)`;
+
+  const pendMetaEl = document.getElementById('cashbook-pendapatan-meta');
+  if (pendMetaEl) {
+    pendMetaEl.textContent = cb.isPendapatanManual
+      ? `(Manual • POS: ${cb.trxCount} trx)`
+      : `(${cb.trxCount} transaksi POS)`;
+  }
+
+  const onlineMetaEl = document.getElementById('cashbook-online-meta');
+  if (onlineMetaEl) {
+    onlineMetaEl.textContent = cb.isOnlineManual
+      ? `Diisi manual (POS: ${formatRp(cb.posOnline)})`
+      : `Otomatis dari ${cb.onlineCount} transaksi QRIS/Transfer`;
+  }
+
+  const btnResetOmset = document.getElementById('btn-reset-pos-omset');
+  if (btnResetOmset) {
+    btnResetOmset.style.display = (cb.isPendapatanManual || cb.isOnlineManual) ? 'inline-block' : 'none';
+  }
+
+  // Equation Preview & Target Uang Fisik Wajib Ada di Laci
+  const eqPreviewEl = document.getElementById('cashbook-equation-preview');
+  if (eqPreviewEl) {
+    const sisaOperator = cb.sisaModal < 0
+      ? `- ${Math.abs(cb.sisaModal).toLocaleString('id-ID')}`
+      : `+ ${cb.sisaModal.toLocaleString('id-ID')}`;
+    eqPreviewEl.textContent = `Rumus Buku Kas: ${cb.pendapatan.toLocaleString('id-ID')} ${sisaOperator} - ${cb.online.toLocaleString('id-ID')} = ${cb.totalTunai.toLocaleString('id-ID')}`;
+  }
+
+  const valTunaiEl = document.getElementById('cashbook-val-tunai');
+  if (valTunaiEl) {
+    valTunaiEl.textContent = cb.totalTunai < 0
+      ? `-Rp ${Math.abs(cb.totalTunai).toLocaleString('id-ID')}`
+      : formatRp(cb.totalTunai);
+  }
+
+  // Column B: Denominasi Uang Fisik di Laci
+  const denomActiveCountEl = document.getElementById('cashbook-denom-active-count');
+  if (denomActiveCountEl) {
+    const activeTypes = CASHBOOK_DENOM_LIST.filter(d => (Number(cb.denoms[d]) || 0) > 0).length;
+    denomActiveCountEl.textContent = `${activeTypes} Pecahan Aktif`;
+  }
+
+  const denomGridEl = document.getElementById('cashbook-denom-grid');
+  if (denomGridEl) {
+    denomGridEl.innerHTML = CASHBOOK_DENOM_LIST.map(denom => {
+      const qty = Number(cb.denoms[denom]) || 0;
+      const label = denom === 2000 ? '2rb / 1rb' : denom.toLocaleString('id-ID');
+      return `
+        <div class="cb-denom-item">
+          <span class="cb-denom-label">${label}</span>
+          <div class="cb-denom-stepper">
+            <button type="button" class="cb-denom-btn" onclick="updateCashbookDenom(${denom}, -1)" aria-label="Kurangi pecahan ${label}">-</button>
+            <input type="number" class="cb-denom-qty" value="${qty}" min="0" step="1" aria-label="Jumlah lembar ${label}" onchange="updateCashbookDenom(${denom}, 0, this.value)">
+            <button type="button" class="cb-denom-btn" onclick="updateCashbookDenom(${denom}, 1)" aria-label="Tambah pecahan ${label}">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const denomTotalEl = document.getElementById('cashbook-denom-total');
+  if (denomTotalEl) {
+    denomTotalEl.textContent = formatRp(cb.denomTotal);
+  }
+
+  const denomDiffEl = document.getElementById('cashbook-denom-diff');
+  if (denomDiffEl) {
+    if (cb.denomDiff === 0) {
+      denomDiffEl.className = 'cb-denom-diff-pill';
+      denomDiffEl.innerHTML = `<i data-lucide="check" style="width:13px;height:13px;"></i> <span>Selisih Rp 0 (Tepat Cocok)</span>`;
+    } else if (cb.denomDiff > 0) {
+      denomDiffEl.className = 'cb-denom-diff-pill info';
+      denomDiffEl.innerHTML = `<i data-lucide="trending-up" style="width:13px;height:13px;"></i> <span>Lebih +${formatRp(cb.denomDiff)}</span>`;
+    } else {
+      denomDiffEl.className = 'cb-denom-diff-pill warn';
+      denomDiffEl.innerHTML = `<i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> <span>Kurang -${formatRp(Math.abs(cb.denomDiff))}</span>`;
+    }
+  }
+
+  // Smart 1-Click Split Chips
+  const splitBarEl = document.getElementById('cashbook-quick-split-bar');
+  if (splitBarEl) {
+    if (cb.totalTunai > 0) {
+      const chips = [];
+      const roundSave100 = Math.floor(cb.totalTunai / 100000) * 100000;
+      const remEsok100 = cb.totalTunai - roundSave100;
+      if (roundSave100 > 0 && remEsok100 > 0) {
+        chips.push(`
+          <button type="button" class="btn-split-chip primary-suggest" onclick="applyQuickSplit(${roundSave100}, ${remEsok100})">
+            Saran Bulat: Setor ${formatRp(roundSave100)} / Laci Esok ${formatRp(remEsok100)}
+          </button>
+        `);
+      }
+      [50000, 80000, 100000].forEach(targetEsok => {
+        if (cb.totalTunai > targetEsok && targetEsok !== remEsok100) {
+          const targetSave = cb.totalTunai - targetEsok;
+          chips.push(`
+            <button type="button" class="btn-split-chip" onclick="applyQuickSplit(${targetSave}, ${targetEsok})">
+              Laci Esok Rp ${targetEsok / 1000}rb (Setor ${formatRp(targetSave)})
+            </button>
+          `);
+        }
+      });
+      splitBarEl.innerHTML = chips.join('');
+    } else {
+      splitBarEl.innerHTML = `<span style="font-size:11px; color:var(--text-muted);">Saran pembagian cepat aktif saat saldo fisik laci lebih dari Rp 0.</span>`;
+    }
+  }
+
+  // Alokasi Save & Modal Esok + Live Formatted Readouts
+  const saveInput = document.getElementById('cashbook-input-save');
+  if (saveInput && document.activeElement !== saveInput) {
+    saveInput.value = cb.saveAmount > 0 ? cb.saveAmount : (cashbook[activeCashbookDate]?.saveAmount === 0 ? 0 : '');
+  }
+
+  const modalEsokInput = document.getElementById('cashbook-input-modal-esok');
+  if (modalEsokInput && document.activeElement !== modalEsokInput) {
+    modalEsokInput.value = cb.modalEsok > 0 ? cb.modalEsok : (cashbook[activeCashbookDate]?.modalEsok === 0 ? 0 : '');
+  }
+
+  const readoutSaveEl = document.getElementById('cashbook-readout-save');
+  if (readoutSaveEl) readoutSaveEl.textContent = formatRp(cb.saveAmount);
+
+  const readoutEsokEl = document.getElementById('cashbook-readout-modal-esok');
+  if (readoutEsokEl) readoutEsokEl.textContent = formatRp(cb.modalEsok);
+
+  const allocAlertEl = document.getElementById('cashbook-allocation-alert');
+  if (allocAlertEl) {
+    if (cb.totalTunai < 0) {
+      allocAlertEl.className = 'cashbook-alloc-feedback warn';
+      allocAlertEl.innerHTML = `Total Tunai bernilai minus (<strong>${formatSignedRp(cb.totalTunai)}</strong>). Pastikan nominal <strong>Pendapatan</strong> dan <strong>Online</strong> sudah sesuai.`;
+    } else if (cb.saveAmount > cb.totalTunai) {
+      allocAlertEl.className = 'cashbook-alloc-feedback warn';
+      allocAlertEl.innerHTML = `Nominal <strong>Setor (${formatRp(cb.saveAmount)})</strong> melebihi <strong>Uang Fisik Laci (${formatRp(cb.totalTunai)})</strong> sebesar ${formatRp(cb.saveAmount - cb.totalTunai)}.`;
+    } else if (cb.totalTunai > 0) {
+      allocAlertEl.className = 'cashbook-alloc-feedback ok';
+      allocAlertEl.innerHTML = `Sudah Pas: <strong>Setor Owner (${formatRp(cb.saveAmount)})</strong> + <strong>Tinggal di Laci Esok (${formatRp(cb.modalEsok)})</strong> = <strong>Total Laci (${formatRp(cb.totalTunai)})</strong>.`;
+    } else {
+      allocAlertEl.className = 'cashbook-alloc-feedback';
+      allocAlertEl.innerHTML = `Ketik nominal <strong>Setor</strong> atau <strong>Tinggal di Laci</strong>, pasangan nilainya dihitung otomatis.`;
+    }
+  }
+
+  lucide.createIcons();
+}
+
+window.shiftCashbookDate = function(deltaDays) {
+  try {
+    const parts = (activeCashbookDate || new Date().toISOString().split('T')[0]).split('-').map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    d.setDate(d.getDate() + deltaDays);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    activeCashbookDate = `${yyyy}-${mm}-${dd}`;
+    renderExpense();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+window.setCashbookToday = function() {
+  activeCashbookDate = new Date().toISOString().split('T')[0];
+  renderExpense();
+};
+
+window.selectCashbookDate = function(isoDate) {
+  if (!isoDate) return;
+  activeCashbookDate = isoDate;
+  switchExpenseMode('CASHBOOK');
+  renderExpense();
+  const sheet = document.getElementById('cashbook-sheet');
+  if (sheet) sheet.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.resetCashbookModalToCarryOver = function() {
+  if (cashbook[activeCashbookDate]) {
+    cashbook[activeCashbookDate].modalAwal = null;
+    saveCashbook();
+  }
+  renderExpense();
+  showToast('Modal Awal dikembalikan ke sisa modal kemarin otomatis', 'info');
+};
+
+window.resetCashbookOmsetToPos = function() {
+  if (cashbook[activeCashbookDate]) {
+    cashbook[activeCashbookDate].manualPendapatan = null;
+    cashbook[activeCashbookDate].manualOnline = null;
+    saveCashbook();
+  }
+  renderExpense();
+  showToast('Pendapatan & Online dikembalikan ke data transaksi POS otomatis', 'info');
+};
+
+window.handleQuickAddExpense = function() {
+  const catSelect = document.getElementById('cashbook-quick-cat');
+  const descInput = document.getElementById('cashbook-quick-desc');
+  const amtInput = document.getElementById('cashbook-quick-amount');
+  const empInput = document.getElementById('cashbook-quick-employee');
+
+  const category = catSelect ? catSelect.value : 'KAFE';
+  const desc = descInput ? descInput.value.trim() : '';
+  const amount = parseInt(amtInput ? amtInput.value : 0, 10);
+  const fundSource = activeQuickFundSource === 'KARYAWAN' ? 'KARYAWAN' : 'KASIR';
+  const employeeName = empInput ? empInput.value.trim() : '';
+
+  if (!desc || isNaN(amount) || amount <= 0) {
+    return showToast('Isi keterangan barang dan nominal Rupiah dengan benar', 'error');
+  }
+  if (fundSource === 'KARYAWAN' && !employeeName) {
+    if (empInput) empInput.focus();
+    return showToast('Masukkan nama karyawan yang menalangi belanja ini', 'error');
+  }
+
+  const isoDate = activeCashbookDate || new Date().toISOString().split('T')[0];
+  let formattedDate = isoDate;
+  try {
+    const parts = isoDate.split('-');
+    if (parts.length === 3) {
+      formattedDate = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+    }
+  } catch (err) {}
+
+  const newExpense = {
+    id: 'EXP-' + Date.now(),
+    desc,
+    amount,
+    category,
+    fundSource,
+    employeeName: fundSource === 'KARYAWAN' ? employeeName : '',
+    reimbursementStatus: fundSource === 'KARYAWAN' ? 'PENDING' : 'SETTLED',
+    reimbursedAt: '',
+    date: formattedDate,
+    isoDate,
+    timestamp: Date.now()
+  };
+
+  expenses.unshift(newExpense);
+  saveExpenses();
+
+  if (descInput) {
+    descInput.value = '';
+    descInput.focus();
+  }
+  if (amtInput) amtInput.value = '';
+  if (empInput) empInput.value = '';
+
+  renderExpense();
+  updateDashboardStats();
+  renderReports();
+  if (fundSource === 'KARYAWAN') {
+    showToast(`Talangan "${desc}" (${formatRp(amount)}) oleh ${employeeName} berhasil dicatat`, 'info');
+  } else {
+    showToast(`Pengeluaran laci "${desc}" (${formatRp(amount)}) berhasil dicatat`, 'success');
+  }
+};
+
+window.saveCurrentCashbook = function(showNotif = true) {
+  const entry = ensureCashbookEntry(activeCashbookDate);
+  const cb = getCashbookCalculation(activeCashbookDate);
+
+  entry.modalAwal = cb.modalAwal;
+  entry.saveAmount = cb.saveAmount;
+  entry.modalEsok = cb.modalEsok;
+  entry.isSaved = true;
+  entry.updatedAt = Date.now();
+
+  saveCashbook();
+  renderExpense();
+
+  if (showNotif) {
+    showToast(`Shift ditutup & disimpan! Modal Esok (${formatRp(cb.modalEsok)}) otomatis menjadi Modal Pagi esok hari.`, 'success');
+  }
+};
+
+window.openCashbookReceiptModal = function(isoDate = activeCashbookDate) {
+  const cb = getCashbookCalculation(isoDate);
+  const cashierDisplay = currentUser ? currentUser.name : 'Kasir 1966';
+
+  window.currentReceiptTrx = {
+    isCashbookReceipt: true,
+    id: 'KAS-' + cb.isoDate.replace(/-/g, ''),
+    date: cb.isoDate,
+    friendlyDate: cb.friendlyDate,
+    cashierName: cashierDisplay,
+    modalAwal: cb.modalAwal,
+    shoppingItems: cb.shoppingItems,
+    belanjaHarian: cb.belanjaHarian,
+    sisaModal: cb.sisaModal,
+    pendapatan: cb.pendapatan,
+    online: cb.online,
+    totalTunai: cb.totalTunai,
+    saveAmount: cb.saveAmount,
+    modalEsok: cb.modalEsok,
+    cashbookData: {
+      modalAwal: cb.modalAwal,
+      dayExpenses: cb.shoppingItems,
+      belanjaKasLaci: cb.belanjaHarian,
+      sisaModal: cb.sisaModal,
+      pendapatan: cb.pendapatan,
+      online: cb.online,
+      totalTunai: cb.totalTunai,
+      saveOwner: cb.saveAmount,
+      modalEsok: cb.modalEsok,
+      denominations: cb.denoms,
+      totalFisikDenom: cb.denomTotal,
+      selisihFisik: cb.denomDiff
+    }
+  };
+
+  document.getElementById('receipt-date-time').textContent = cb.friendlyDate;
+  document.getElementById('receipt-id').textContent = 'REKAP BUKU KAS & LACI HARIAN';
+  document.getElementById('receipt-type-label').textContent = `Operator: ${cashierDisplay}`;
+
+  const table = document.getElementById('receipt-items-table');
+  table.innerHTML = '';
+
+  // 1. Modal Awal Row
+  const trModal = document.createElement('tr');
+  trModal.innerHTML = `
+    <td style="padding-bottom:4px;"><strong>Modal Awal Laci</strong></td>
+    <td style="text-align:right; font-weight:700; padding-bottom:4px;">${formatRp(cb.modalAwal)}</td>
+  `;
+  table.appendChild(trModal);
+
+  // 2. Belanja Harian Header & Items
+  const trShopHead = document.createElement('tr');
+  trShopHead.innerHTML = `<td colspan="2" style="color:#444; font-weight:700; padding-top:2px;">Belanja Harian:</td>`;
+  table.appendChild(trShopHead);
+
+  if (cb.shoppingItems.length === 0) {
+    const trEmpty = document.createElement('tr');
+    trEmpty.innerHTML = `<td colspan="2" style="color:#666; font-style:italic;">  (Tidak ada belanja kas)</td>`;
+    table.appendChild(trEmpty);
+  } else {
+    cb.shoppingItems.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="padding-left:6px;">* ${item.desc}</td>
+        <td style="text-align:right;">${formatRp(item.amount)}</td>
+      `;
+      table.appendChild(tr);
+    });
+  }
+
+  // 3. Total Belanja & Sisa Modal
+  const trTotShop = document.createElement('tr');
+  trTotShop.innerHTML = `
+    <td style="border-top:1px dashed #666; padding-top:4px;">Total Belanja</td>
+    <td style="border-top:1px dashed #666; text-align:right; padding-top:4px;">-${formatRp(cb.belanjaHarian)}</td>
+  `;
+  table.appendChild(trTotShop);
+
+  const trSisa = document.createElement('tr');
+  trSisa.innerHTML = `
+    <td style="padding-bottom:4px;"><strong>Sisa Modal</strong></td>
+    <td style="text-align:right; font-weight:700; padding-bottom:4px;">${formatSignedRp(cb.sisaModal)}</td>
+  `;
+  table.appendChild(trSisa);
+
+  // Summary Table Rows
+  const subEl = document.getElementById('receipt-subtotal');
+  if (subEl && subEl.previousElementSibling) subEl.previousElementSibling.textContent = 'Pendapatan';
+  if (subEl) subEl.textContent = formatRp(cb.pendapatan);
+
+  const discRow = document.getElementById('receipt-discount-row');
+  const discEl = document.getElementById('receipt-discount');
+  if (discRow) discRow.style.display = 'table-row';
+  if (discEl && discEl.previousElementSibling) discEl.previousElementSibling.textContent = 'Online (Non-Tunai)';
+  if (discEl) discEl.textContent = '-' + formatRp(cb.online);
+
+  const taxEl = document.getElementById('receipt-tax');
+  if (taxEl && taxEl.parentElement) taxEl.parentElement.style.display = 'none';
+
+  const totEl = document.getElementById('receipt-total');
+  if (totEl && totEl.previousElementSibling) totEl.previousElementSibling.textContent = 'TOTAL TUNAI';
+  if (totEl) totEl.textContent = formatRp(cb.totalTunai);
+
+  document.getElementById('receipt-method-label').textContent = 'Save (Setor)';
+  document.getElementById('receipt-paid').textContent = formatRp(cb.saveAmount);
+
+  const chgRow = document.getElementById('receipt-change-row');
+  const chgEl = document.getElementById('receipt-change');
+  if (chgRow) chgRow.style.display = 'table-row';
+  if (chgEl && chgEl.previousElementSibling) chgEl.previousElementSibling.textContent = 'Modal Esok';
+  if (chgEl) chgEl.textContent = formatRp(cb.modalEsok);
+
+  document.getElementById('modal-receipt').classList.add('show');
+  lucide.createIcons();
+};
+
+// Setup Live Input Listeners for Cashbook Sheet
+let cashbookListenersInitialized = false;
+function setupCashbookListeners() {
+  if (cashbookListenersInitialized) return;
+  cashbookListenersInitialized = true;
+
+  const dateInput = document.getElementById('cashbook-active-date');
+  dateInput?.addEventListener('change', (e) => {
+    if (e.target.value) {
+      activeCashbookDate = e.target.value;
+      renderExpense();
+    }
+  });
+
+  const modalInput = document.getElementById('cashbook-input-modal');
+  modalInput?.addEventListener('input', (e) => {
+    const entry = ensureCashbookEntry(activeCashbookDate);
+    const raw = e.target.value.trim();
+    entry.modalAwal = raw === '' ? null : Math.max(0, parseInt(raw, 10) || 0);
+    entry.updatedAt = Date.now();
+    saveCashbook();
+    renderExpense();
+  });
+
+  const pendInput = document.getElementById('cashbook-input-pendapatan');
+  pendInput?.addEventListener('input', (e) => {
+    const entry = ensureCashbookEntry(activeCashbookDate);
+    const raw = e.target.value.trim();
+    entry.manualPendapatan = raw === '' ? null : Math.max(0, parseInt(raw, 10) || 0);
+    entry.updatedAt = Date.now();
+    saveCashbook();
+    renderExpense();
+  });
+
+  const onlineInput = document.getElementById('cashbook-input-online');
+  onlineInput?.addEventListener('input', (e) => {
+    const entry = ensureCashbookEntry(activeCashbookDate);
+    const raw = e.target.value.trim();
+    entry.manualOnline = raw === '' ? null : Math.max(0, parseInt(raw, 10) || 0);
+    entry.updatedAt = Date.now();
+    saveCashbook();
+    renderExpense();
+  });
+
+  const saveInput = document.getElementById('cashbook-input-save');
+  saveInput?.addEventListener('input', (e) => {
+    const entry = ensureCashbookEntry(activeCashbookDate);
+    const raw = e.target.value.trim();
+    const saveVal = raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0);
+    entry.saveAmount = saveVal;
+    entry.lastEditedAlloc = 'SAVE';
+    const cb = getCashbookCalculation(activeCashbookDate);
+    entry.modalEsok = Math.max(0, cb.totalTunai - saveVal);
+    entry.updatedAt = Date.now();
+    saveCashbook();
+    renderExpense();
+  });
+
+  const modalEsokInput = document.getElementById('cashbook-input-modal-esok');
+  modalEsokInput?.addEventListener('input', (e) => {
+    const entry = ensureCashbookEntry(activeCashbookDate);
+    const raw = e.target.value.trim();
+    const esokVal = raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0);
+    entry.modalEsok = esokVal;
+    entry.lastEditedAlloc = 'MODAL_ESOK';
+    const cb = getCashbookCalculation(activeCashbookDate);
+    entry.saveAmount = Math.max(0, cb.totalTunai - esokVal);
+    entry.updatedAt = Date.now();
+    saveCashbook();
+    renderExpense();
+  });
+}
+
 function openAddExpenseModal() {
   const modal = document.getElementById('modal-add-expense');
   if (!modal) return;
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const defaultDate = activeCashbookDate || new Date().toISOString().split('T')[0];
   const dateInput = document.getElementById('input-expense-date');
-  if (dateInput) dateInput.value = todayStr;
+  if (dateInput) dateInput.value = defaultDate;
 
   const descInput = document.getElementById('input-expense-desc');
   if (descInput) descInput.value = '';
@@ -1480,6 +2532,7 @@ function openAddExpenseModal() {
 
   modal.classList.add('show');
 }
+window.openAddExpenseModal = openAddExpenseModal;
 
 // Radio change listeners for Add Expense Modal
 document.querySelectorAll('input[name="add-expense-fund"]').forEach(radio => {
@@ -1504,7 +2557,7 @@ document.querySelectorAll('input[name="edit-expense-fund"]').forEach(radio => {
 });
 
 // Save New Expense
-document.getElementById('btn-save-expense').addEventListener('click', () => {
+document.getElementById('btn-save-expense')?.addEventListener('click', () => {
   const dateInput = document.getElementById('input-expense-date');
   const catInput = document.getElementById('input-expense-category');
   const descInput = document.getElementById('input-expense-desc');
@@ -1566,6 +2619,7 @@ document.getElementById('btn-save-expense').addEventListener('click', () => {
 
   expenses.unshift(newExpense);
   saveExpenses();
+  activeCashbookDate = isoDate;
 
   document.getElementById('modal-add-expense')?.classList.remove('show');
   renderExpense();
@@ -1613,7 +2667,7 @@ window.openEditExpense = function(id) {
   if (!modal) return;
 
   document.getElementById('edit-expense-date').value = exp.isoDate || new Date().toISOString().split('T')[0];
-  document.getElementById('edit-expense-category').value = exp.category || 'KAFE';
+  document.getElementById('edit-expense-category').value = exp.category === 'OPERASIONAL' ? 'UMUM' : (exp.category || 'KAFE');
   document.getElementById('edit-expense-desc').value = exp.desc || '';
   document.getElementById('edit-expense-amount').value = exp.amount || 0;
 
@@ -1640,7 +2694,7 @@ window.openEditExpense = function(id) {
 };
 
 // Save Edit Expense
-document.getElementById('btn-save-edit-expense').addEventListener('click', () => {
+document.getElementById('btn-save-edit-expense')?.addEventListener('click', () => {
   if (!editingExpenseId) return;
   const exp = expenses.find(e => String(e.id) === String(editingExpenseId));
   if (!exp) return showToast('Catatan pengeluaran tidak ditemukan', 'error');
@@ -1724,8 +2778,10 @@ document.getElementById('btn-delete-expense')?.addEventListener('click', () => {
   }
 });
 
-// Render Expense Grouped by Date
+// Render Expense & Daily Cashbook
 function renderExpense() {
+  renderCashbookSheet(activeCashbookDate);
+
   const container = document.getElementById('expense-grouped-container');
   if (!container) return;
 
@@ -1755,7 +2811,7 @@ function renderExpense() {
       }
     }
     if (e.category === 'KAFE') totalKafe += amt;
-    if (e.category === 'CUCI') totalCuci += amt;
+    if (e.category === 'CUCI' || e.category === 'MAKANAN') totalCuci += amt;
 
     if (e.fundSource === 'KARYAWAN' && e.reimbursementStatus === 'PENDING') {
       pendingReimbCount++;
@@ -1784,6 +2840,16 @@ function renderExpense() {
 
   const expReimbCountEl = document.getElementById('exp-stat-reimb-count');
   if (expReimbCountEl) expReimbCountEl.textContent = `${pendingReimbCount} Menunggu Penggantian`;
+
+  const tabBadgeReimbEl = document.getElementById('tab-badge-reimb');
+  if (tabBadgeReimbEl) {
+    if (pendingReimbCount > 0) {
+      tabBadgeReimbEl.style.display = 'inline-block';
+      tabBadgeReimbEl.textContent = `${pendingReimbCount} Talangan Belum Diganti`;
+    } else {
+      tabBadgeReimbEl.style.display = 'none';
+    }
+  }
 
   const reimbCardEl = document.getElementById('card-metric-reimb');
   if (reimbCardEl) {
@@ -1822,11 +2888,11 @@ function renderExpense() {
 
     container.innerHTML = `
       <div class="panel" style="text-align:center; padding: 48px 24px; color:var(--text-muted);">
-        <div style="width:52px; height:52px; border-radius:50%; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:var(--text-secondary);">
+        <div style="width:52px; height:52px; border-radius:50%; background:var(--primary-light); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:var(--primary);">
           <i data-lucide="wallet" style="width:24px;height:24px;"></i>
         </div>
         <h4 style="margin-bottom:6px; color:var(--text-main); font-size:15px;">${emptyMsg}</h4>
-        <p style="font-size:12px; margin-bottom:16px;">Catat belanja bahan baku kopi, makanan, packaging, atau operasional kafe.</p>
+        <p style="font-size:12px; margin-bottom:16px;">Catat belanja bahan baku kopi, dapur/resto, packaging, atau operasional kafe melalui Buku Kas di atas.</p>
         <button class="btn-primary-sm" onclick="openAddExpenseModal()" style="display:inline-flex; align-items:center; gap:6px;">
           <i data-lucide="plus" style="width:14px;height:14px;"></i> Catat Biaya Sekarang
         </button>
@@ -1853,12 +2919,14 @@ function renderExpense() {
 
     const friendlyDate = formatDateIndo(dateKey);
     const isToday = dateKey === nowIso;
+    const dayCb = getCashbookCalculation(dateKey);
+    const sisaColor = dayCb.sisaModal < 0 ? '#9F1239' : '#065F46';
 
     html += `
       <div class="expense-date-card">
         <div class="expense-date-header">
           <div class="expense-date-title">
-            <span class="expense-date-badge" style="background:${isToday ? 'var(--primary)' : '#486581'};">
+            <span class="expense-date-badge" style="background:${isToday ? 'var(--primary)' : '#6E4F4B'};">
               ${isToday ? 'Hari Ini' : dateKey}
             </span>
             <div>
@@ -1874,11 +2942,28 @@ function renderExpense() {
           </div>
         </div>
 
+        <div class="expense-date-cashbook-strip">
+          <div class="cashbook-strip-metrics">
+            <span class="cashbook-strip-pill">Modal: <strong>${formatRp(dayCb.modalAwal)}</strong></span>
+            <span>•</span>
+            <span class="cashbook-strip-pill">Sisa Modal: <strong style="color:${sisaColor};">${formatSignedRp(dayCb.sisaModal)}</strong></span>
+            <span>•</span>
+            <span class="cashbook-strip-pill">Tunai Laci: <strong>${formatRp(dayCb.totalTunai)}</strong></span>
+            <span>•</span>
+            <span class="cashbook-strip-pill">Save: <strong>${formatRp(dayCb.saveAmount)}</strong></span>
+            <span>•</span>
+            <span class="cashbook-strip-pill">Modal Esok: <strong style="color:var(--primary);">${formatRp(dayCb.modalEsok)}</strong></span>
+          </div>
+          <button type="button" class="btn-link-reset" onclick="selectCashbookDate('${dateKey}')">
+            Buka di Buku Kas
+          </button>
+        </div>
+
         <div class="table-responsive">
           <table class="data-table" style="margin:0;">
             <thead>
               <tr>
-                <th style="width:110px;">Layanan</th>
+                <th style="width:125px;">Alokasi</th>
                 <th>Keterangan Biaya</th>
                 <th>Sumber Dana & Status</th>
                 <th style="text-align:right; width:130px;">Nominal</th>
@@ -1887,11 +2972,11 @@ function renderExpense() {
             </thead>
             <tbody>
               ${items.map(item => {
-                let categoryBadge = `<span class="category-tag KAFE">Minuman</span>`;
+                let categoryBadge = `<span class="category-tag KAFE">Kafe (F&B)</span>`;
                 if (item.category === 'CUCI' || item.category === 'MAKANAN') {
-                  categoryBadge = `<span class="category-tag CUCI">Makanan</span>`;
-                } else if (item.category === 'UMUM') {
-                  categoryBadge = `<span class="category-tag" style="background:#E2E8F0; color:#334155;">Umum</span>`;
+                  categoryBadge = `<span class="category-tag CUCI">Dapur / Resto</span>`;
+                } else if (item.category === 'UMUM' || item.category === 'OPERASIONAL') {
+                  categoryBadge = `<span class="category-tag" style="background:var(--surface-subtle); color:var(--text-secondary); border:1px solid var(--border-color);">Operasional</span>`;
                 }
 
                 let fundHtml = '';
@@ -1954,9 +3039,9 @@ function renderExpense() {
         <!-- Mobile Reflow Cards (Auto active at <= 680px) -->
         <div class="expense-mobile-list" style="display:none; flex-direction:column; gap:10px; padding:12px;">
           ${items.map(item => {
-            let catTag = `<span class="category-tag KAFE">Minuman</span>`;
-            if (item.category === 'CUCI' || item.category === 'MAKANAN') catTag = `<span class="category-tag CUCI">Makanan</span>`;
-            else if (item.category === 'UMUM') catTag = `<span class="category-tag" style="background:#E2E8F0; color:#334155;">Umum</span>`;
+            let catTag = `<span class="category-tag KAFE">Kafe (F&B)</span>`;
+            if (item.category === 'CUCI' || item.category === 'MAKANAN') catTag = `<span class="category-tag CUCI">Dapur / Resto</span>`;
+            else if (item.category === 'UMUM' || item.category === 'OPERASIONAL') catTag = `<span class="category-tag" style="background:var(--surface-subtle); color:var(--text-secondary); border:1px solid var(--border-color);">Operasional</span>`;
 
             let fundTag = '';
             if (item.fundSource === 'KASIR') {
@@ -5499,6 +6584,7 @@ if (btnExportPDF) {
 }
 
 // Initial Bootstrapping
+setupCashbookListeners();
 renderPOS();
 updateCart();
 renderMenuTable();
